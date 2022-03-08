@@ -5,7 +5,7 @@ jobs:
     workspace:
       clean: all
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'Ubuntu 16.04'
     container:
       image: 'microsoftlearning/markdown-build:latest'
     steps:
