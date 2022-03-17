@@ -1,166 +1,171 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub에서 SQL Server 리소스 공급자 구현'
-    module: '모듈 2: 서비스 제공'
+  title: 实验室：在 Azure Stack Hub 中实现 SQL Server 资源提供程序
+  module: 'Module 2: Provide Services'
+ms.openlocfilehash: 76aa2946e5adb7bc82368595813707e49c85088a
+ms.sourcegitcommit: f99a365741ad02181da3b4fc4a921d5437810bc2
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/02/2022
+ms.locfileid: "139252339"
 ---
+# <a name="lab---implement-sql-server-resource-provider-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中实现 SQL Server 资源提供程序
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub에서 SQL Server 리소스 공급자 구현
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+150 分钟
 
-150분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要允许租户部署 SQL Server 数据库。 
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 테넌트가 SQL Server 데이터베이스를 배포하도록 허용해야 합니다. 
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 在 Azure Stack Hub 中实现 SQL Server 资源提供程序。
 
-- Azure Stack Hub에서 SQL Server 리소스 공급자 구현
+## <a name="lab-environment"></a>实验室环境 
 
-## 랩 환경 
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境具有以下配置：
 
-랩 환경의 구성은 다음과 같습니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
-
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 
-
-
-### 연습 1: Azure Stack Hub에서 SQL Server 리소스 공급자 설치
-
-이 연습에서는 Azure Stack Hub에서 SQL Server 리소스 공급자를 설치합니다.
-
-1. SQL Server 리소스 공급자 바이너리 다운로드 
-1. SQL Server 리소스 공급자 설치
-1. SQL Server 리소스 공급자 설치 확인
-
->**참고**: 이 연습을 최대한 빠른 시간 내에 끝낼 수 있도록 Azure Stack Hub SQL Server 리소스 공급자를 설치하려면 수행해야 하는 다음을 비롯한 일부 작업은 이미 완료된 상태입니다.
-
-- Azure Marketplace 신디케이션 구현
-- Azure Marketplace에서 **Microsoft AzureStack 추가 기능 RP Windows Server** 다운로드
-
-#### 작업 1: SQL Server 리소스 공급자 바이너리 다운로드
-
-이 작업에서는 다음을 수행합니다.
-
-- SQL Server 리소스 공급자 바이너리 다운로드
-
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
-
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저 내 허브 메뉴에서 **모든 서비스**를 클릭합니다.
-1. **모든 서비스** 블레이드에서 **Marketplace 관리**를 검색하여 해당 항목을 선택합니다.
-1. Marketplace 관리 블레이드에서 사용 가능한 서비스 목록에 **Microsoft AzureStack 추가 기능 RP Windows Server**가 표시되어 있는지 확인합니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내에서 다른 웹 브라우저 창을 시작합니다. 그런 다음 (https://aka.ms/azshsqlrp11931) 에서 SQL 리소스 공급자 자동 압축 풀기 실행 파일을 다운로드하여 **C:\\Downloads\\SQLRP** 폴더에 해당 파일의 압축을 풉니다(폴더를 먼저 만들어야 함).
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 
 
 
-#### 작업 2: SQL Server 리소스 공급자 설치
+### <a name="exercise-1-install-the-sql-server-resource-provider-in-azure-stack-hub"></a>练习 1：在 Azure Stack Hub 中安装 SQL Server 资源提供程序
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将在 Azure Stack Hub 中安装 SQL Server 资源提供程序。
 
-- SQL Server 리소스 공급자 설치
+1. 下载 SQL Server 资源提供程序二进制文件 
+1. 安装 SQL Server 资源提供程序
+1. 验证 SQL Server 资源提供程序的安装
 
-1. AzSHOST-1에 연결된 원격 데스크톱 세션 내에서 관리자로 Windows PowerShell을 시작합니다.
+>**注意**：为了将此练习的持续时间缩至最短，已完成安装 Azure Stack Hub SQL Server 资源提供程序所需的一些任务，包括：
 
-    > **참고:** 새 PowerShell 세션을 시작하세요.
+- 实现 Azure 市场联合
+- 从 Azure 市场下载 Microsoft AzureStack 附加产品 RP Windows Server
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 신뢰할 수 있는 리포지토리로 PowerShell 갤러리를 구성합니다.
+#### <a name="task-1-download-sql-server-resource-provider-binaries"></a>任务 1：下载 SQL Server 资源提供程序二进制文件
+
+在此任务中，你将：
+
+- 下载 SQL Server 资源提供程序二进制文件
+
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
+
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
+
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器的“中心”菜单中，单击“所有服务” 。
+1. 在“所有服务”边栏选项卡上，搜索并选择“市场管理” 
+1. 在“市场管理”边栏选项卡上，验证可用服务列表中是否显示了 Microsoft AzureStack 附加产品 RP Windows Server。
+1. 在与 AzSHOST-1 的远程桌面会话中，启动另一个 Web 浏览器窗口，从 (https://aka.ms/azshsqlrp11931) ) 下载 SQL 资源提供程序自解压缩可执行文件，然后将其内容解压缩到 C:\\ Downloads\\ SQLRP 文件夹（需先创建该文件夹） 。
+
+
+#### <a name="task-2-install-the-sql-server-resource-provider"></a>任务 2：安装 SQL Server 资源提供程序
+
+在此任务中，你将：
+
+- 安装 SQL Server 资源提供程序
+
+1. 在与 AzSHOST-1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+
+    > **注意：** 确保启动新的 PowerShell 会话。
+
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，将 PowerShell 库配置为受信任的存储库
 
     ```powershell
     Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 SQL Server 리소스 공급자에 필요한 AzureRM.Bootstrapper 모듈 버전을 설치합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，安装 SQL Server 资源提供程序所需的 AzureRM.Bootstrapper 模块版本：
 
     ```powershell
     Get-Module -Name Azs.* -ListAvailable | Uninstall-Module -Force -Verbose
     Get-Module -Name Azure* -ListAvailable | Uninstall-Module -Force -Verbose
 
-    Install-Module -Name AzureRm.BootStrapper -RequiredVersion 0.5.0 -Force
-    Install-Module -Name AzureStack -RequiredVersion 1.6.0
+    Install-Module -Name Az.BootStrapper -Force
+    Install-AzProfile -Profile 2020-09-01-hybrid -Force
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 신뢰할 수 있는 리포지토리로 PowerShell 갤러리를 구성합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，注册 Azure Stack Hub 操作员 PowerShell 环境：
 
     ```powershell
-    Add-AzureRmEnvironment -Name 'AzureStackAdmin' -ArmEndpoint 'https://adminmanagement.local.azurestack.external' `
-       -AzureKeyVaultDnsSuffix adminvault.local.azurestack.external `
-       -AzureKeyVaultServiceEndpointResourceId https://adminvault.local.azurestack.external
+    Add-AzEnvironment -Name 'AzureStackAdmin' -ArmEndpoint 'https://adminmanagement.local.azurestack.external' `
+      -AzureKeyVaultDnsSuffix adminvault.local.azurestack.external `
+      -AzureKeyVaultServiceEndpointResourceId https://adminvault.local.azurestack.external
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 현재 환경을 설정합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，设置当前环境：
 
     ```powershell
-    Set-AzureRmEnvironment -Name 'AzureStackAdmin'
+    Set-AzEnvironment -Name 'AzureStackAdmin'
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 핸재 환경에 인증합니다(메시지가 표시되면 암호로 **Pa55w.rd1234**를 사용해 **CloudAdmin@azurestack.local** 사용자로 로그인).
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，对当前环境进行身份验证（出现提示时，以 CloudAdmin@azurestack.local 用户身份使用密码 Pa55w.rd1234 进行登录） ：
 
     ```powershell
-    Connect-AzureRmAccount -EnvironmentName 'AzureStackAdmin'
+    Connect-AzAccount -EnvironmentName 'AzureStackAdmin'
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 인증이 정상적으로 완료되었으며 해당 컨텍스트가 설정되었음을 확인합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，验证是否通过了身份验证，以及是否设置了相应的上下文：
 
     ```powershell
-    Get-AzureRmContext
+    Get-AzContext
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 SQL Server 리소스 공급자를 설치하는 데 필요한 변수를 설정합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，设置安装 SQL Server 资源提供程序所需的变量：
 
     ```powershell
     $domain = 'azurestack.local'
     $privilegedEndpoint = 'AzS-ERCS01'
     $downloadDir = 'C:\Downloads\SQLRP'
 
-    # AzureStack\AzureStackAdmin 자격 증명 설정
+    # Set the AzureStack\AzureStackAdmin credentials
     $serviceAdmin = 'AzureStackAdmin@azurestack.local'
     $serviceAdminPass = ConvertTo-SecureString 'Pa55w.rd1234' -AsPlainText -Force
     $serviceAdminCreds = New-Object System.Management.Automation.PSCredential ($serviceAdmin, $serviceAdminPass)
 
-    # AzureStack\CloudAdmin 자격 증명 설정
+    # Set the AzureStack\CloudAdmin credentials
     $cloudAdminName = 'AzureStack\CloudAdmin'
     $cloudAdminPass = ConvertTo-SecureString 'Pa55w.rd1234' -AsPlainText -Force
     $cloudAdminCreds = New-Object PSCredential($cloudAdminName, $cloudAdminPass)
 
-    # 새 리소스 공급자 VM 로컬 관리자 계정 설정
+    # Set credentials for the new resource provider VM local admin account
     $vmLocalAdminPass = ConvertTo-SecureString 'Pa55w.rd1234' -AsPlainText -Force
     $vmLocalAdminCreds = New-Object System.Management.Automation.PSCredential ('sqlrpadmin', $vmLocalAdminPass)
 
     # Set a password that will protect the private key of a self-signed certificate generated to secure the SQL Server resource provider
     $pfxPass = ConvertTo-SecureString 'Pa55w.rd1234pfx' -AsPlainText -Force
 
-    # SQL Server 리소스 공급자 모듈을 포함하도록 PowerShell 모듈 경로 환경 변수 업데이트
+    # Update the PowerShell module path environment variable to include the SQL Server resource provider modules
     $rpModulePath = Join-Path -Path $env:ProgramFiles -ChildPath 'SqlMySqlPsh'
     $env:PSModulePath = $env:PSModulePath + ';' + $rpModulePath 
     ```
 
-1. **관리자: Windows PowerShell** 프롬프트에서 현재 디렉터리를 SQL Server 리소스 공급자 설치 파일의 압축을 풀었던 위치로 변경하고 DeploySQLProvider.ps1 스크립트를 실행합니다.
+1. 在“管理员: Windows PowerShell”提示符，将当前目录更改为解压缩后的 SQL Server 资源提供程序安装文件所在的位置，然后运行 DeploySQLProvider.ps1 脚本：
 
     ```powershell
     Set-Location -Path 'C:\Downloads\SQLRP'
@@ -173,289 +178,289 @@ lab:
         -DefaultSSLCertificatePassword $pfxPass
     ```
 
-    > **참고:** 설치가 완료될 때까지 기다립니다. 1시간 정도 걸릴 수 있습니다.
+    > 备注：请等待安装完成。 该操作需要约 1 小时。
 
-#### 작업 3: SQL Server 리소스 공급자 설치 확인
+#### <a name="task-3-verify-installation-of-the-sql-server-resource-provider"></a>任务 3：验证 SQL Server 资源提供程序的安装
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- SQL Server 리소스 공급자 설치 확인
+- 验证 SQL Server 资源提供程序的安装
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 Azure Stack 관리자 포털이 표시된 웹 브라우저 창으로 전환한 다음 허브 메뉴에서 **리소스 그룹**을 클릭합니다. 
-1. **리소스 그룹** 블레이드에서 **system.local.sqladapter**를 클릭합니다.
-1. **system.local.sqladapter** 블레이드에서 **배포** 항목을 검토하여 모든 배포가 정상적으로 완료되었는지 확인합니다.
-1. Azure Stack 관리자 포털에서 **가상 머신**으로 이동하여 SQL 리소스 공급자 VM이 정상적으로 생성되어 실행되고 있는지 확인합니다.
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 테넌트 포털](https://portal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 메시지가 표시되면 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 테넌트 포털의 허브 메뉴에서 **리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **데이터 + 스토리지**를 선택하고 사용 가능한 리소스 종류 목록에 **SQL 데이터베이스**가 표시되는지 확인합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，切换到显示 Azure Stack 管理员门户的 Web 浏览器窗口，单击“中心”菜单中的“资源组” 。 
+1. 在“资源组”边栏选项卡上，单击 system.local.sqladapter 。
+1. 在 system.local.sqladapter 边栏选项卡上，查看“部署”条目并验证所有部署是否成功 。
+1. 在 Azure Stack 管理员门户中，导航到“虚拟机”并验证 SQL 资源提供程序 VM 是否已成功创建并正在运行。
+1. 在与 AzS-HOST1 的远程桌面会话中，打开显示 [Azure Stack Hub 租户门户](https://portal.local.azurestack.external/)的 Web 浏览器窗口，如果出现提示，以 CloudAdmin@azurestack.local 身份登录。
+1. 在 Azure Stack Hub 租户门户的中心菜单中，单击“创建资源”。
+1. 在“新建”边栏选项卡上，选择“数据 + 存储”，然后验证可用资源类型列表中是否显示了 SQL 数据库  。
 
->**검토**: 이 연습에서는 Azure Stack Hub에서 SQL Server 리소스 공급자를 설치했습니다.
+>回顾：在本练习中，你在 Azure Stack Hub 中安装了 SQL Server 资源提供程序
 
 
-### 연습 2: Azure Stack Hub에서 SQL Server 리소스 공급자 구성
+### <a name="exercise-2-configure-sql-server-resource-provider-in-azure-stack-hub"></a>练习 2：在 Azure Stack Hub 中配置 SQL Server 资源提供程序
 
-이 연습에서는 Azure Stack Hub에서 SQL Server 리소스 공급자를 구성합니다.
+在本练习中，你将在 Azure Stack Hub 中配置 SQL Server 资源提供程序。
 
-1. SQL Server 호스팅 서버용 요금제, 제안 및 구독 만들기(클라우드 운영자 역할)
-1. SQL Server 호스팅 서버로 사용할 Azure Stack Hub VM 배포(클라우드 운영자 역할)
-1. SQL 호스팅 서버 추가(클라우드 운영자 역할)
-1. 사용자에게 SQL 데이터베이스 제공(클라우드 운영자 역할)
-1. SQL 데이터베이스 만들기(사용자 역할)
+1. 为 SQL Server 托管服务器创建计划、套餐和订阅（以云操作员的身份）
+1. 部署将成为 SQL Server 托管服务器的 Azure Stack Hub VM（以云操作员的身份）
+1. 添加 SQL 托管服务器（以云操作员的身份）
+1. 向用户提供 SQL 数据库（以云操作员的身份）
+1. 创建 SQL 数据库（以用户身份）
 
->**참고**: 이 연습을 최대한 빠른 시간 내에 끝낼 수 있도록 Azure Stack Hub SQL Server 리소스 공급자 구성을 원활하게 진행하려면 수행해야 하는 다음을 비롯한 일부 작업은 이미 완료된 상태입니다.
+>**注意**：为了将此练习的持续时间缩至最短，已完成有助于配置 Azure Stack Hub SQL Server 资源提供程序的一些任务，包括：
 
-- Azure Marketplace에서 SQL Server 이미지 다운로드
-- Azure Marketplace에서 **Sql IaaS VM 확장** 다운로드
+- 从 Azure 市场下载 SQL Server 映像
+- 从 Azure 市场下载 Sql IaaS VM 扩展
 
 
-#### 작업 1: SQL Server 호스팅 서버용 요금제, 제안 및 구독 만들기(클라우드 운영자 역할)
+#### <a name="task-1-create-a-plan-offer-and-subscription-for-a-sql-server-hosting-server-as-a-cloud-operator"></a>任务 1：为 SQL Server 托管服务器创建计划、套餐和订阅（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- SQL Server 호스팅 서버용 요금제, 제안 및 구독 만들기(클라우드 운영자 역할)
+- 为 SQL Server 托管服务器创建计划、套餐和订阅（以云操作员的身份）
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **+ 리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **제안+요금제**를 클릭한 다음 **요금제**를 클릭합니다.
-1. **새 요금제** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“+ 创建资源”。
+1. 在“新建”边栏选项卡上，单击“套餐 + 计划”，然后单击“计划”  。
+1. 在“新建计划”边栏选项卡的“基本信息”选项卡上，指定以下设置 ：
 
-    - 표시 이름: **sql-server-hosting-plan1**
-    - 리소스 이름: **sql-server-hosting-plan1**
-    - 리소스 그룹: 새 리소스 그룹 **sql-server-hosting-plans-RG**의 이름.
+    - 显示名称：sql-server-hosting-plan1
+    - 资源名称：sql-server-hosting-plan1
+    - 资源组：新资源组名称 sql-server-hosting-plans-RG
 
-1. **다음: 서비스 >** 를 클릭합니다.
-1. **새 요금제** 블레이드의 **서비스** 탭에서 **Microsoft.Compute**, **Microsoft.Storage** 및 **Microsoft.Network** 체크박스를 선택합니다.
-1. **다음: 할당량>** 을 클릭합니다.
-1. **새 요금제** 블레이드의 **할당량** 탭에서 다음 설정을 지정합니다.
+1. 单击“下一步:服务 >”。
+1. 在“新建计划”边栏选项卡的“服务”选项卡上，选中“Microsoft.Compute”、“Microsoft.Storage”和“Microsoft.Network”复选框    。
+1. 单击“下一步:配额 >”。
+1. 在“新建计划”边栏选项卡的“配额”选项卡上，指定以下设置 ：
 
-    - Microsoft.Compute: **기본 할당량**
-    - Microsoft.Network: **기본 할당량**
-    - Microsoft.Storage: **기본 할당량**
+    - Microsoft.Compute：**默认配额**
+    - Microsoft.Network：**默认配额**
+    - Microsoft.Storage：**默认配额**
 
-1. **검토 + 만들기**와 **만들기**를 차례로 클릭합니다.
+1. 依次单击“查看 + 创建”、“创建”。 
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 새로 만들기 블레이드로 돌아와서 **제안**을 클릭합니다.
-1. **새 제안 만들기** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，返回到“新建”边栏选项卡，单击“套餐”  。
+1. 在“新建套餐”边栏选项卡的“基本信息”选项卡中，指定以下设置 ：
 
-    - 표시 이름: **sql-server-hosting-offer1**
-    - 리소스 이름: **sql-server-hosting-offer1**
-    - 리소스 그룹: **sql-server-hosting-offers-RG**
-    - 이 제안을 공개로 설정: **아니요**
+    - 显示名称：sql-server-hosting-offer1
+    - 资源名称：sql-server-hosting-offer1
+    - 资源组：sql-server-hosting-offers-RG
+    - 公开提供此套餐：**否**
 
-1. **다음: 기본 요금제 >** 를 클릭합니다. 
-1. **새 제안 만들기** 블레이드의 **기본 요금제** 탭에서 **sql-server-hosting-plan1** 항목 옆의 체크박스를 선택합니다.
-1. **다음: 추가 요금제 >** 를 클릭합니다.
-1. **추가 요금제** 설정은 기본값으로 유지하고 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
+1. 单击“下一步:基本计划 >”。 
+1. 在“新建套餐”边栏选项卡的“基本计划”选项卡上，选中“sql-server-hosting-plan1”条目旁边的复选框  。
+1. 单击“下一步:附加产品计划 >”。
+1. 保留“附加产品计划”设置为默认值，单击“查看 + 创建”，然后单击“创建”  。
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **새로 만들기** 블레이드로 돌아와서 **구독**을 클릭합니다.
-1. **사용자 구독 만들기** 블레이드에서 다음 설정을 지정하고 **만들기**를 클릭합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，返回到“新建”边栏选项卡，在“套餐 + 计划”部分单击“订阅”   。
+1. 在“创建用户订阅”边栏选项卡上，指定以下设置，然后单击“创建” 。
 
-    - 이름: **sql-server-hosting-subscription1**
-    - 사용자: **cloudadmin@azurestack.local**
-    - 디렉터리 테넌트: **ADFS.azurestack.local**
-    - 제안 이름: **sql-server-hosting-offer1**
+    - 名称：sql-server-hosting-subscription1
+    - 用户：cloudadmin@azurestack.local
+    - 目录租户：ADFS.azurestack.local
+    - 套餐名称：sql-server-hosting-offer1
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-1. Azure Stack Hub 관리자 포털 창은 열어 둡니다.
+1. 使 Azure Stack Hub 管理员门户窗口处于打开状态。
 
 
-#### 작업 2: SQL Server 호스팅 서버로 사용할 Azure Stack Hub VM 배포(클라우드 운영자 역할)
+#### <a name="task-2-deploy-an-azure-stack-hub-vm-that-will-become-a-sql-server-hosting-server-as-a-cloud-operator"></a>任务 2：部署将成为 SQL Server 托管服务器的 Azure Stack Hub VM（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- SQL Server 호스팅 서버로 사용할 Azure Stack Hub VM 배포(클라우드 운영자 역할)
+- 部署将成为 SQL Server 托管服务器的 Azure Stack Hub VM（以云操作员的身份）
 
-    >**참고**: 청구 가능한 사용자 구독에서 SQL Server 호스팅 서버로 작동하는 Azure Stack Hub VM을 만들어야 합니다.
+    >**注意**：应在可计费用户订阅中创建作为 SQL Server 托管服务器运行的 Azure Stack Hub VM。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 테넌트 포털](https://portal.local.azurestack.external/)이 표시된 웹 브라우저 창으로 전환합니다.
-1. Azure Stack Hub 테넌트 포털의 허브 메뉴에서 **리소스 만들기**를 클릭합니다.
-1. 새로 만들기 블레이드에서 컴퓨팅을 선택하고 사용 가능한 리소스 종류 목록에서 **{WS-BYOL} 무료 SQL Server 라이선스: Windows Server 2016의 SQL Server 2017 Express**를 선택합니다.
-1. **가상 머신 만들기** 블레이드의 **기본 내용** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+1. 在与 AzS-HOST1 的远程桌面会话中，切换到显示 [Azure Stack Hub 租户门户](https://portal.local.azurestack.external/)的 Web 浏览器窗口。
+1. 在 Azure Stack Hub 租户门户的中心菜单中，单击“创建资源”。
+1. 在“新建”边栏选项卡上，选择“计算”，然后在可用资源类型列表中，选择“{WS-BYOL} 免费 SQL Server 许可证: Windows Server 2016 上的 SQL Server 2017 Express”。
+1. 在“创建虚拟机”边栏选项卡的“基本信息”窗格上，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-    - 이름: **sql-host-vm0**
-    - VM 디스크 유형: **프리미엄 SSD**
-    - 사용자 이름: **sqladmin**
-    - 암호: **Pa55w.rd**
-    - 구독: **sql-server-hosting-subscription1**
-    - 리소스 그룹: 새 리소스 그룹 **sql-server-hosting-RG**의 이름.
-    - 위치: **로컬**
+    - 名称：sql-host-vm0
+    - VM 磁盘类型：**高级·SSD**
+    - 用户名：sqladmin
+    - 密码：Pa55w.rd1234
+    - 订阅：sql-server-hosting-subscription1
+    - 资源组：新资源组名称 sql-server-hosting-RG
+    - 位置：本地
 
-1. **크기 선택** 블레이드에서 **DS1_v2**를 선택하고 **선택**을 클릭합니다.
-1. **가상 머신 만들기** 블레이드의 **설정** 창에서 **네트워크 보안 그룹** 설정을 **고급**으로 지정하고 **네트워크 보안 그룹(방화벽)** 을 클릭합니다.
-1. **네트워크 보안 그룹 만들기** 블레이드에서 **+ 인바운드 규칙 추가**를 클릭합니다.
-1. **인바운드 보안 규칙 추가** 블레이드에서 다음 설정을 지정하고 **추가**를 클릭합니다(나머지는 기본값을 그대로 유지).
+1. 在“选择大小”边栏选项卡上选择“DS1_v2”，然后单击“选择”  。
+1. 在“创建虚拟机”边栏选项卡的“设置”窗格上，将“网络安全组”设置设为“高级”，然后单击“网络安全组(防火墙)”    。
+1. 在“创建网络安全组”边栏选项卡中，单击“+ 添加入站规则”。
+1. 在“添加入站安全规则”边栏选项卡中，指定以下设置并单击“添加”（将其他设置保留为默认值）：
 
-    - 대상 포트 범위: **1433**
-    - 프로토콜: **TCP**
-    - 작업: **허용**
-    - 이름: **SQL**
+    - 目标端口范围：1433
+    - 协议：**TCP**
+    - 操作：**允许**
+    - 名称：SQL
 
-1. **네트워크 보안 그룹 만들기** 블레이드로 돌아와서 **확인**을 클릭합니다.
-1. **가상 머신 만들기** 블레이드의 **설정** 창으로 돌아와서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+1. 回到“创建网络安全组”边栏选项卡，单击“确定”。
+1. 回到“创建虚拟机”边栏选项卡的“设置”窗格，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-    - 부팅 진단: 사용 안 함
-    - 게스트 OS 진단: 사용 안 함
+    - 启动诊断：Disabled
+    - 来宾 OS 诊断：Disabled
 
-1. **가상 머신 만들기** 블레이드의 **SQL Server 설정** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+1. 在“创建虚拟机”边栏选项卡的“SQL Server 设置”窗格上，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-    - SQL 연결: **공용(인터넷)**
-    - 포트: **1433**
-    - SQL 인증: **사용**
-    - 로그인 이름: **SQLAdmin**
-    - 암호: **Pa55w.rd**
-    - 스토리지 구성: **일반**
-    - 자동화된 패치: **사용 안 함**
-    - 자동화된 백업: **사용 안 함**
-    - Azure Key Vault 통합: **사용 안 함**
+    - SQL 连接：公共 (Internet)
+    - 端口：1433
+    - SQL 身份验证：启用
+    - 登录名：SQLAdmin
+    - 密码：Pa55w.rd
+    - 存储配置：**常规**
+    - 自动修补：禁用
+    - 自动备份：禁用
+    - Azure 密钥保管库集成：禁用
 
-1. **가상 머신 만들기** 블레이드의 **요약** 창에서 **확인**을 클릭합니다.
+1. 在“创建虚拟机”边栏选项卡的“摘要”窗格中，单击“确定”。
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 20분 정도 걸릴 수 있습니다.
+    >备注：请等待部署完成。 该操作需要约 20 分钟。
 
-1. 배포가 완료되면 **sql-host-vm0** 가상 머신 블레이드로 이동하여 **개요** 섹션의 **DNS 이름** 레이블 바로 아래에 있는 **구성**을 클릭합니다.
-1. **sql-host-vm0-ip \| 구성** 블레이드의 **DNS 이름 레이블(옵션)** 텍스트 상자에 **sql-host-vm0**을 입력하고 **저장**을 클릭합니다.
+1. 部署完成后，导航到“sql-host-vm0”虚拟机边栏选项卡，在“概述”部分中的“DNS 名称”标签下，单击“配置”   。
+1. 在“sql-host-vm0-ip \| 配置”边栏选项卡上的“DNS 名称标签(可选)”文本框中，键入 sql-host-vm0 并单击“保存”   。
 
-    >**참고**: 이렇게 하면 **sql-host-vm0.local.cloudapp.azurestack.external** DNS 이름을 통해 **sql-host-vm0**을 사용할 수 있게 됩니다.
+    >**注意**：这样即可通过 sql-host-vm0.local.cloudapp.azurestack.external DNS 名称使用 sql-host-vm0 。
 
-1. **sql-host-vm0-ip \| 구성** 블레이드에서 **할당** 옵션을 **정적**으로 설정하고 **저장**을 클릭합니다.
+1. 在“sql-host-vm0-ip \| 配置”边栏选项卡上，将“分配”选项设置为“静态”，然后单击“保存”   。
 
-    >**참고**: 이렇게 하면 **sql-host-vm0** 가상 머신 다시 시작이 트리거됩니다.
+    >**注意**：这将触发 sql-host-vm0 虚拟机的重启。
 
 
-#### 작업 3: SQL 호스팅 서버 추가(클라우드 운영자 역할)
+#### <a name="task-3-add-a-sql-hosting-server-as-a-cloud-operator"></a>任务 3：添加 SQL 托管服务器（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- SQL 호스팅 서버 추가(클라우드 운영자 역할)
+- 添加 SQL 托管服务器（以云操作员的身份）
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저에서 **모든 서비스**를 클릭하고 **관리 리소스** 섹션에서 **SQL 호스팅 서버**를 클릭합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器中，单击“所有服务”，在“管理资源”部分，单击“SQL 托管服务器”   。
 
-    > **참고:** Azure Stack 관리자 포털이 표시된 브라우저 페이지를 새로 고쳐야 **SQL 호스팅 서버** 리소스 종류가 표시될 수도 있습니다.
+    > **注意：** 你可能需要刷新显示 Azure Stack 管理员门户的浏览器页面，以显示 SQL 托管服务器资源类型。
 
-1. **SQL 호스팅 서버** 블레이드에서 **+ 추가**를 클릭합니다.
-1. **SQL 호스팅 서버 추가** 블레이드에서 다음 설정을 지정합니다.
+1. 在“SQL 托管服务器”边栏选项卡中，单击“+ 添加” 。
+1. 在“添加 SQL 托管服务器”边栏选项卡上，指定以下设置：
 
-    - SQL Server 이름: **sql-host-vm0.local.cloudapp.azurestack.external**
-    - 사용자 이름: **sqladmin**
-    - 암호: **Pa55w.rd**
-    - 호스팅 서버 크기(GB): **50**
-    - Always On 가용성 그룹: 선택 취소
-    - 구독: **기본 공급자 구독**
-    - 리소스 그룹: 새 리소스 그룹 **sql.resources-RG**의 이름.
-    - 위치: **로컬**
+    - SQL Server 名称：sql-host-vm0.local.cloudapp.azurestack.external
+    - 用户名：**sqladmin**
+    - 密码：Pa55w.rd1234
+    - 托管服务器大小 (GB)：50
+    - Always On 可用性组：未勾选
+    - 订阅：默认提供商订阅
+    - 资源组：新资源组名称 sql.resources-RG
+    - 位置：本地
 
-1. **SQL 호스팅 서버 추가** 블레이드에서 **SKU**를 클릭하고 **SKU** 블레이드에서 **새 SKU 만들기**를 클릭한 후에 **SKU 만들기** 블레이드에서 다음 설정을 지정합니다.
+1. 在“添加 SQL 托管服务器”边栏选项卡上，单击“SKU”，在“SKU”边栏选项卡上，单击“新建 SKU”，然后在“创建 SKU”边栏选项卡上，指定以下设置    ：
 
-    - 이름: **MSSQL2017Exp**
-    - 제품군: **SQL Server 2017**
-    - 계층: **독립 실행형**
-    - 버전: **Express**
+    - 名称：MSSQL2017Exp
+    - 系列：SQL Server 2017
+    - 层：独立版
+    - 版本：**Express**
 
-1. **SKU 만들기** 블레이드에서 **확인**을 클릭하고 **SQL 호스팅 서버 추가** 블레이드로 돌아와서 **만들기**를 클릭합니다.
+1. 在“创建 SKU”边栏选项卡上，单击“确定”，然后返回到“添加 SQL 托管服务器”边栏选项卡，单击“创建”   。
 
-    > **참고:** 작업이 완료될 때까지 기다립니다. 1분도 걸리지 않습니다.
+    > **注意：** 等待操作完成。 此过程应该会在 1 分钟内完成。
 
-1. **SQL 호스팅 서버** 블레이드에서 **새로 고침**을 클릭하고 서버 목록에 **sqlhost1.local.cloudapp.azurestack.external**이 표시되는지 확인합니다.
+1. 在“SQL 托管服务器”边栏选项卡上，单击“刷新”，并验证服务器列表中是否显示了 sqlhost1.local.cloudapp.azurestack.external  。
 
 
-#### 작업 4: 사용자에게 SQL 데이터베이스 제공(클라우드 운영자 역할)
+#### <a name="task-4-make-sql-databases-available-to-users-as-a-cloud-operator"></a>任务 4：向用户提供 SQL 数据库（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 사용자에게 SQL 데이터베이스 제공(클라우드 운영자 역할)
+- 向用户提供 SQL 数据库（以云操作员的身份）
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **+ 리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **제안+요금제**를 클릭한 다음 **요금제**를 클릭합니다.
-1. **새 요금제** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“+ 创建资源” 。
+1. 在“新建”边栏选项卡上，单击“套餐 + 计划”，然后单击“计划”  。
+1. 在“新建计划”边栏选项卡的“基本信息”选项卡上，指定以下设置 ：
 
-    - 표시 이름: **sql-server-2017-express-db-plan1**
-    - 리소스 이름: **sql-server-2017-express-db-plan1**
-    - 리소스 그룹: 새 리소스 그룹 **sqldb-plans-RG**의 이름.
+    - 显示名称：sql-server-2017-express-db-plan1
+    - 资源名称：sql-server-2017-express-db-plan1
+    - 资源组：新资源组名称 sqldb-plans-RG
 
-1. **다음: 서비스 >** 를 클릭합니다.
-1. **새 요금제** 블레이드의 **서비스** 탭에서 **Microsoft.SQLAdapter** 체크박스를 선택합니다.
-1. **다음: 할당량>** 을 클릭합니다.
-1. **새 요금제** 블레이드의 **할당량** 탭에서 **Microsoft.SQLAdapter** 항목 옆의 **새로 만들기**를 클릭합니다.
-1. **할당량 만들기** 블레이드에서 다음 설정을 지정하고 **만들기**를 클릭합니다.
+1. 单击“下一步:服务 >”。
+1. 在“新建计划”边栏选项卡的“服务”选项卡上，选中“Microsoft.SQLAdapter”复选框  。
+1. 单击“下一步:配额 >”。
+1. 在“新建计划”边栏选项卡的“配额”选项卡上，单击“Microsoft.SQLAdapter”条目旁边的“新建”   。
+1. 在“创建配额”边栏选项卡上，指定以下设置，然后单击“创建”：
 
-    - 할당량 이름: **sql-server-2017-express-db-quota1**
-    - 모든 데이터베이스의 최대 크기(GB): **2**
-    - 최대 데이터베이스 수: **20**
+    - 配额名称：sql-server-2017-express-db-quota1
+    - 所有数据库最大大小 (GB)：**2**
+    - 最大数据库数：20
 
-1. **검토 + 만들기**와 **만들기**를 차례로 클릭합니다.
+1. 依次单击“查看 + 创建”、“创建”。 
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **새로 만들기** 블레이드로 돌아와서 **제안**을 클릭합니다.
-1. **새 제안 만들기** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，返回到“新建”边栏选项卡，单击“套餐”  。
+1. 在“新建套餐”边栏选项卡的“基本信息”选项卡中，指定以下设置 ：
 
-    - 표시 이름: **sql-server-2017-express-db-offer1**
-    - 리소스 이름: **sql-server-2017-express-db-offer1**
-    - 리소스 그룹: **sqldb-offers-RG**
-    - 이 제안을 공개로 설정: **예**
+    - 显示名称：sql-server-2017-express-db-offer1
+    - 资源名称：sql-server-2017-express-db-offer1
+    - 资源组：sqldb-offers-RG
+    - 公开提供此套餐：**是**
 
-1. **다음: 기본 요금제 >** 를 클릭합니다. 
-1. **새 제안 만들기** 블레이드의 **기본 요금제** 탭에서 **sql-server-2017-express-db-plan1** 항목 옆의 체크박스를 선택합니다.
-1. **다음: 추가 요금제 >** 를 클릭합니다.
-1. **추가 요금제** 설정은 기본값으로 유지하고 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
+1. 单击“下一步:基本计划 >”。 
+1. 在“新建套餐”边栏选项卡的“基本计划”选项卡上，选中“sql-server-2017-express-db-plan1”条目旁边的复选框  。
+1. 单击“下一步:附加产品计划 >”。
+1. 保留“附加产品计划”设置为默认值，单击“查看 + 创建”，然后单击“创建”  。
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
 
-#### 작업 5: SQL 데이터베이스 만들기(사용자 역할)
+#### <a name="task-5-crate-a-sql-database-as-a-user"></a>任务 5：创建 SQL 数据库（以用户身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 테스트 사용자 계정 만들기
-- 새로 만든 사용자 계정을 사용하여 SQL 데이터베이스 만들기
+- 创建测试用户帐户
+- 使用新创建的用户帐户创建 SQL 数据库
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 **시작**을 클릭하고 시작 메뉴에서 **Windows 관리 도구**를 클릭합니다. 그런 다음 관리 도구 목록에서 **Active Directory 관리 센터**를 두 번 클릭합니다.
-1. **Active Directory 관리 센터** 콘솔에서 **azurestack(로컬)** 을 클릭합니다.
-1. 세부 정보 창에서 **사용자** 컨테이너를 두 번 클릭합니다.
-1. **작업** 창의 **사용자** 섹션에서 **새로 만들기 -> 사용자**를 클릭합니다.
-1. **사용자 만들기** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다. 
+1. 在与 AzS-HOST1 的远程桌面会话中，单击“开始”，在“开始”菜单中，单击“Windows 管理工具”，然后在管理工具列表中，双击“Active Directory 管理中心”   。
+1. 在“Active Directory 管理中心”控制台中，单击“azurestack(本地)” 。
+1. 在“详细信息”窗格中，双击“用户”容器。
+1. 在“任务”窗格的“用户”部分中，单击“新建”->“用户”  。
+1. 在“创建用户”窗口中，指定以下设置，然后单击“确定” ： 
 
-    - 전체 이름: **T1U1**
-    - 사용자 UPN 로그온: **t1u1@azurestack.local**
-    - 사용자 SamAccountName: **azurestack\t1u1**
-    - 암호: **Pa55w.rd**
-    - 암호 옵션: **기타 암호 옵션 -> 암호 사용 기간 제한 없음**
+    - 全名：T1U1
+    - 用户 UPN 登录名：t1u1@azurestack.local
+    - 用户 SamAccountName：azurestack\t1u1
+    - 密码：Pa55w.rd
+    - 密码选项：“其他密码选项”->“密码永不过期”
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저의 InPrivate 세션을 시작합니다.
-1. 웹 브라우저 창에서 [Azure Stack Hub 사용자 포털](https://portal.local.azurestack.external)로 이동하여 **Pa55w.rd** 암호를 사용해 **t1u1@azurestack.local**로 로그인합니다.
-1. Azure Stack Hub 사용자 포털의 대시보드에서 **구독 가져오기** 타일을 클릭합니다.
-1. **구독 가져오기** 블레이드의 **이름** 텍스트 상자에 **t1u1-sqldb-subscription1**을 입력합니다.
-1. 제안 목록에서 **sql-server-2017-express-db-offer1**을 선택하고 **만들기**를 클릭합니다.
-1. **구독이 생성되었습니다. 구독을 사용해서 시작하려면 포털을 새로 고쳐야 합니다.** 메시지가 표시되면 **새로 고침**을 클릭합니다. 
-1. Azure Stack Hub 테넌트 포털의 허브 메뉴에서 **모든 서비스**를 클릭합니다.
-1. 서비스 목록에서 **SQL 데이터베이스**를 클릭합니다.
-1. **SQL 데이터베이스** 블레이드에서 **+ 추가**를 클릭합니다.
-1. **데이터베이스 만들기** 블레이드에서 다음 설정을 지정합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，启动 Web 浏览器的 InPrivate 会话。
+1. 在 Web 浏览器窗口中，导航到 [Azure Stack Hub 用户门户](https://portal.local.azurestack.external)并使用 t1u1@azurestack.local 和密码 Pa55w.rd 登录 。
+1. 在 Azure Stack Hub 用户门户中，单击“仪表板”上的“获取订阅”磁贴。
+1. 在“获取订阅”边栏选项卡的“名称”文本框中，键入“t1u1-sqldb-subscription1”  。
+1. 在套餐列表中，选择“sql-server-2017-express-db-offer1”，然后单击“创建” 。
+1. 出现消息“订阅已创建。必须刷新门户才能开始使用订阅”时，单击“刷新”。 
+1. 在 Azure Stack Hub 租户门户的中心菜单中，单击“所有服务”。
+1. 在服务列表中，单击“SQL 数据库”。
+1. 在“SQL 数据库”边栏选项卡中，单击“+ 添加” 。
+1. 在“创建数据库”边栏选项卡上，指定以下设置：
 
-    - 데이터베이스 이름: **sqldb1**
-    - 데이터 정렬: **SQL_Latin1_General_CP1_CI_AS**
-    - 최대 크기(MB): **200**
-    - 구독: **t1u1-sqldb-subscription1**
-    - 리소스 그룹: 새 리소스 그룹 **sqldb-RG**의 이름.
-    - 위치: **로컬**
-    - SKU: **MSSQL2017Exp**
+    - 数据库名称：sqldb1
+    - 排序规则：**SQL_Latin1_General_CP1_CI_AS**
+    - 最大大小 (MB)：200
+    - 订阅：t1u1-sqldb-subscription1
+    - 资源组：新资源组名称 sqldb-RG
+    - 位置：本地
+    - SKU：MSSQL2017Exp
 
-    >**참고**: 새로 만든 SKU를 테넌트 포털에서 사용하려면 잠시 기다려야 할 수도 있습니다.
+    >**注意**：你可能需要等待新创建的 SKU 在租户门户中可用。
 
-1. **데이터베이스 만들기** 블레이드에서 **로그인**을 클릭합니다.
-1. **로그인 선택** 블레이드에서 **새 로그인 만들기**를 클릭합니다.
-1. **새 로그인** 블레이드에서 다음 설정을 지정하고 **확인**을 클릭합니다.
+1. 在“创建数据库”边栏选项卡中，单击“登录名” 。
+1. 在“选择登录名”边栏选项卡中，单击“新建登录名” 。
+1. 在“新建登录名”边栏选项卡上，指定以下设置，并单击“确定” ：
 
-    - 데이터베이스 로그인: **dbAdmin**
-    - 암호: **Pa55w.rd**
+    - 数据库登录名：dbAdmin
+    - 密码：Pa55w.rd
 
-1. **데이터베이스 만들기** 블레이드로 돌아와서 **만들기**를 클릭합니다.
+1. 返回“创建数据库”边栏选项卡，单击“创建” 。
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 1분도 걸리지 않습니다. 
+>备注：请等待部署完成。 这应该可以在一分钟内完成。 
 
->**검토**: 이 연습에서는 SQL Server 호스팅 서버를 Azure Stack Hub에 추가하고 테넌트에 제공했으며, 테넌트 사용자로 SQL 데이터베이스를 배포했습니다.
+>回顾：在本练习中，你将 SQL Server 托管服务器添加到了 Azure Stack Hub，将该服务器提供给了租户，并以租户用户身份部署了 SQL 数据库。

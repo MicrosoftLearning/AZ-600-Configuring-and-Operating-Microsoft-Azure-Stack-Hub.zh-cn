@@ -1,109 +1,114 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub에서 서비스 주체 관리'
-    module: '모듈 4: ID 및 액세스 관리'
+  title: 实验室：在 Azure Stack Hub 中管理服务主体
+  module: 'Module 4: Manage Identity and Access'
+ms.openlocfilehash: 771acee127d4c1ed07873c436cf5516343eaf98c
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251660"
 ---
+# <a name="lab---manage-service-principals-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理服务主体
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub에서 서비스 주체 관리
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你计划使用内部开发的应用程序来管理 Azure Stack Hub。 若要允许应用程序进行身份验证，需创建服务主体，并为其分配默认提供商订阅中的参与者角色。
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 내부에서 개발한 애플리케이션을 사용하여 Azure Stack Hub를 관리하려고 합니다. 애플리케이션이 인증을 할 수 있도록 서비스 주체를 만들어 기본 공급자 구독의 Contributor 역할에 할당해야 합니다.
+>**注意**：需要通过 Azure 资源管理器部署或配置资源的应用程序必须由其自身的标识表示。 就像用户以称为用户主体的安全主体来表示那样，应用以服务主体来表示。 服务主体为应用提供标识，可让你只对该应用委托必要的权限。
 
->**참고**: Azure Resource Manager를 통해 리소스를 배포하거나 구성해야 하는 애플리케이션은 자체 ID로 표시되어야 합니다. 사용자가 보안 주체인 사용자 계정으로 표시되는 것처럼, 앱은 서비스 주체로 표시됩니다. 서비스 주체는 앱용 ID를 제공하므로 앱에 필요한 권한만 위임할 수 있습니다.
+应用必须在身份验证期间出示凭据。 这种身份验证由两个要素构成：
 
-앱은 인증 중에 자격 증명을 제공해야 합니다. 이 인증 과정에서는 두 가지 요소가 사용됩니다.
+- 应用程序 ID，有时也称为客户端 ID。 一个用于唯一标识 Active Directory 租户中应用的注册的 GUID。
+- 与应用程序 ID 关联的机密。 你可以生成一个客户端密码字符串（相当于密码），也可以指定一个 X509 证书。
 
-- 애플리케이션 ID - 클라이언트 ID라고도 합니다. GUID - Active Directory 테넌트에서 앱 등록을 고유하게 식별하는 데 사용됩니다.
-- 애플리케이션 ID와 연결된 비밀. 클라이언트 암호 문자열(암호에 해당함)을 생성할 수도 있고 X509 인증서를 지정할 수도 있습니다.
+在本实验室中，你将使用机密。 有关使用证书进行身份验证的详细信息，请参阅[使用应用标识访问 Azure Stack Hub 资源](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals?view=azs-2008&tabs=az1%2Caz2&pivots=state-disconnected)。
 
-이 랩에서는 암호를 사용합니다. 인증서를 사용하는 인증 관련 세부 정보는 [앱 ID를 사용하여 Azure Stack Hub 리소스 액세스](https://docs.microsoft.com/ko-kr/azure-stack/operator/azure-stack-create-service-principals?view=azs-2008&tabs=az1%2Caz2&pivots=state-disconnected)를 참조하세요.
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 在 Azure Stack Hub AD FS 集成方案中创建和管理服务主体。
 
-- Azure Stack Hub AD FS 통합 시나리오에서 서비스 주체 만들기 및 관리
+## <a name="lab-environment"></a>实验室环境 
 
-## 랩 환경 
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境由以下部分组成：
 
-랩 환경에는 다음과 같은 구성 요소가 포함됩니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
-
-이 랩에서 설명하는 방식은 Azure Stack Hub AD FS 통합 시나리오용입니다. Azure Active Directory(Azure AD)를 ID 공급자로 사용하는 경우 서비스 주체 기반 인증을 구현하는 방식 관련 세부 정보는 [앱 ID를 사용하여 Azure Stack Hub 리소스 액세스](https://docs.microsoft.com/ko-kr/azure-stack/operator/azure-stack-create-service-principals?view=azs-2008&tabs=az1%2Caz2&pivots=state-connected)를 참조하세요.
-
-
-### 연습 1: Azure Stack Hub에서 서비스 주체 만들기 및 구성
-
-이 연습에서는 권한 있는 엔드포인트로의 PowerShell 원격 세션을 설정하여 서비스 주체를 만든 다음 Azure Stack Hub 관리자 포털을 사용하여 해당 서비스 주체에 Contributor 역할을 할당합니다. 이 연습에서는 다음 작업을 수행합니다.
-
-1. 서비스 주체 만들기
-1. 서비스 주체에 Contributor 역할 할당
+本实验室中所述的方法特定于 AD FS 集成方案。 要了解在使用 Azure Active Directory (Azure AD) 作为标识提供程序时如何实现基于服务主体的身份验证，请参阅[使用应用标识访问 Azure Stack Hub 资源](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-create-service-principals?view=azs-2008&tabs=az1%2Caz2&pivots=state-connected)。
 
 
-#### 작업 1: 서비스 주체 만들기
+### <a name="exercise-1-create-and-configure-a-service-principal-in-azure-stack-hub"></a>练习 1：在 Azure Stack Hub 中创建和配置服务主体
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将建立与特权终结点的 PowerShell 远程会话以创建服务主体，并使用 Azure Stack Hub 管理员门户为其分配参与者角色。 该练习由以下任务组成：
 
-- PowerShell을 통해 권한 있는 엔드포인트에 연결하여 서비스 주체 만들기
+1. 创建服务主体
+1. 向服务主体分配参与者角色
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+#### <a name="task-1-create-a-service-principal"></a>任务 1：创建服务主体
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 권한 있는 엔드포인트에 대한 PowerShell 원격 세션을 설정합니다.
+在此任务中，你将：
+
+- 通过 PowerShell 连接到特权终结点，并创建服务主体。
+
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
+
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
+
+1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，建立与特权终结点的 PowerShell 远程处理会话：
 
     ```powershell
     $session = New-PSSession -ComputerName AzS-ERCS01 -ConfigurationName PrivilegedEndpoint
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 새 앱 등록(및 서비스 주체 개체)을 만든 다음 **$spObject** 변수에 앱 등록의 참조를 저장합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以创建新的应用注册（和服务主体对象），并将其引用存储在 $spObject 变量中：
 
     ```powershell
     $spObject = Invoke-Command -Session $session -ScriptBlock {New-GraphApplication -Name 'azsmgmt-app1' -GenerateClientSecret}
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Hub 스탬프 정보를 검색한 다음 **$azureStackInfo** 변수에 해당 스탬프의 참조를 저장합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以检索 Azure Stack Hub 印花信息并将其引用存储在 $azureStackInfo 变量中：
 
     ```powershell
     $azureStackInfo = Invoke-Command -Session $session -ScriptBlock {Get-AzureStackStampInformation}
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 권한 있는 엔드포인트에 대한 PowerShell 원격 세션을 종료합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以终止与特权终结点的 PowerShell 远程处理会话：
 
     ```powershell
     $session | Remove-PSSession
     ```
 
-    >**참고**: 일반적으로는 **Close-PrivilegedEndpoint** cmdlet을 사용하여 권한 있는 엔드포인트 세션을 닫아야 합니다. 하지만 이 랩에서는 이 방식을 따르지 않습니다. 세션 기록 로그를 호스트하는 파일 공유를 설정할 필요 없이 작업을 간편하게 수행할 수 있도록 하기 위해서입니다.
+    >**注意**：一般情况下，应使用 Close-PrivilegedEndpoint cmdlet 关闭特权终结点会话。 为了简单起见，我们没有遵循这种做法，这样就无需设置文件共享来托管会话脚本日志。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 이 작업 앞부분에서 검색한 Azure Stack Hub 스탬프 정보를 사용해 서비스 주체를 구성하는 데 사용할 변수 값을 설정합니다. 이때 각 변수가 Azure Resource Manager 사용자 작업에 사용되는 Azure Stack Hub 엔드포인트, Graph API에 액세스하는 데 사용되는 OAuth 토큰을 가져올 대상 그룹, 그리고 ID 공급자의 GUID를 참조하도록 값을 설정해야 합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以使用你之前在此任务中检索到的 Azure Stack Hub 印花信息来设置将用于配置服务主体的变量的值，这些值分别引用用于 Azure 资源管理器用户操作的 Azure Stack Hub 终结点、获取用于访问图形 API 的 Oauth 令牌的受众和标识提供者的 GUID：
 
     ```powershell
     $armUseEndpoint = $azureStackInfo.TenantExternalEndpoints.TenantResourceManager
@@ -111,13 +116,13 @@ lab:
     $tenantID = $azureStackInfo.AADTenantID
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Hub 사용자 환경을 등록 및 설정합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以注册和设置 Azure Stack Hub 用户环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackUser' -ArmEndpoint $armUseEndpoint
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 AzureStackUser 환경에 서비스 주체로 로그인합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以服务主体身份登录到 AzureStackUser 环境：
 
     ```powershell
     $securePassword = $spObject.ClientSecret | ConvertTo-SecureString -AsPlainText -Force
@@ -125,21 +130,21 @@ lab:
     $spUserSignIn = Connect-AzAccount -Environment 'AzureStackUser' -ServicePrincipal -Credential $credential -TenantId $tenantID
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 정상적으로 로그인되었는지 확인합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以验证登录是否成功：
 
     ```powershell
     $spUserSignIn
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 현재 인증 컨텍스트를 제거합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以删除当前身份验证上下文：
 
     ```powershell
     Remove-AzAccount -Username $credential.UserName
     ```
 
-    >**참고**: 이제 위 단계를 같은 순서로 반복하여 Azure Stack Hub 관리자 환경에 인증할 수 있는지 유효성을 검사합니다.
+    >**注意**：现在，你将重复同等的步骤顺序，验证是否可以对 Azure Stack Hub 管理员环境进行身份验证：
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 이 작업 앞부분에서 검색한 Azure Stack Hub 스탬프 정보를 사용해 서비스 주체를 구성하는 데 사용할 변수 값을 설정합니다. 이때 각 변수가 Azure Resource Manager 관리 작업에 사용되는 Azure Stack Hub 엔드포인트, Graph API에 액세스하는 데 사용되는 OAuth 토큰을 가져올 대상 그룹, 그리고 ID 공급자의 GUID를 참조하도록 값을 설정해야 합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以使用你之前在此任务中检索到的 Azure Stack Hub 印花信息来设置将用于配置服务主体的变量的值，这些值分别引用用于 Azure 资源管理器管理操作的 Azure Stack Hub 终结点、获取用于访问图形 API 的 Oauth 令牌的受众和标识提供者的 GUID：
 
     ```powershell
     $armAdminEndpoint = $azureStackInfo.AdminExternalEndpoints.AdminResourceManager
@@ -147,31 +152,31 @@ lab:
     $tenantID = $azureStackInfo.AADTenantID
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Hub 관리자 환경을 등록 및 설정합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以注册和设置 Azure Stack Hub 管理员环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackAdmin' -ArmEndpoint $armAdminEndpoint
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 AzureStackAdmin 환경에 서비스 주체로 로그인합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以服务主体身份登录到 AzureStackAdmin 环境：
 
     ```powershell
     $spAdminSignIn = Connect-AzAccount -Environment 'AzureStackAdmin' -ServicePrincipal -Credential $credential -TenantId $tenantID
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 정상적으로 로그인되었는지 확인합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以验证登录是否成功：
 
     ```powershell
     $spAdminSignIn
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 새 서비스 주체의 속성을 표시합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以显示新服务主体的属性：
 
     ```powershell
     $spObject
     ```
 
-    >**참고**: 출력은 다음과 같은 형식이어야 합니다.
+    >**注意**：输出格式应如下所示：
 
     ```
     ApplicationIdentifier : S-1-5-21-2657257302-3827180852-1812683747-1510
@@ -183,27 +188,27 @@ lab:
     RunspaceId            : 6b142339-b67f-490e-a258-40983c0cd8ea
     ```
 
-    >**참고**: **ApplicationName** 속성의 값을 적어 둡니다. 다음 작업에서 해당 값이 필요합니다. 또한 **ClientSecret** 속성도 별도로 기록하여 관리 애플리케이션을 구현하는 개발자에게 제공해야 합니다.
+    >**注意**：记录 ApplicationName 属性的值。 稍后在下一个任务中将用到它。 此外，你应该记录 ClientSecret 属性的值，并将其提供给实现管理应用程序的开发人员。
 
 
-#### 작업 2: 서비스 주체에 Contributor 역할 할당
+#### <a name="task-2-assign-the-contributor-role-to-the-service-principal"></a>任务 2：向服务主体分配参与者角色
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure Stack Hub 관리자 포털을 사용하여 서비스 주체에 Contributor 역할 할당
+- 使用 Azure Stack Hub 管理员门户将参与者角色分配给服务主体。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창의 허브 메뉴에서 **모든 서비스**를 선택합니다. 
-1. **모든 서비스** 블레이드에서 **일반**을 선택하고 서비스 목록에서 **구독**을 선택합니다.
-1. **구독** 블레이드에서 **기본 공급자 구독**을 선택합니다.
-1. **기본 공급자 구독** 블레이드에서 **IAM(액세스 제어)** 를 선택합니다.
-1. **기본 공급자 구독 | 액세스 제어(IAM)** 블레이드에서 **+ 추가**를 클릭하고 드롭다운 메뉴에서 **역할 할당 추가**를 선택합니다.
-1. **역할 할당 추가** 블레이드에서 다음 설정을 지정하고 **저장**을 클릭합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器的中心菜单中，选择“所有服务”。 
+1. 在“所有服务”边栏选项卡上，选择“常规”，然后在服务列表中选择“订阅”  。
+1. 在“订阅”边栏选项卡上，选择“默认提供商订阅” 。
+1. 在“默认提供商订阅”边栏选项卡上，选择“访问控制(IAM)” 。
+1. 在“默认提供商订阅 | 访问控制(IAM)”边栏选项卡上，单击“+ 添加”，然后在下拉菜单中单击“添加角色分配”  。
+1. 在“添加角色分配”边栏选项卡上，指定以下设置并单击“保存” ：
 
-    - 역할: **Contributor**
-    - 다음에 대한 액세스 할당: **Azure AD 사용자, 그룹 또는 서비스 주체**
-    - 선택 사항: 이전 작업에서 확인했던 서비스 주체의 **ApplicationName** 속성 값을 검색하여 선택합니다.
+    - 角色：**参与者**
+    - 将访问权限分配给：用户、组或服务主体
+    - 选择：搜索并选择在上一个任务中识别的服务主体的 ApplicationName 属性的值。
 
-1. 역할이 정상적으로 할당되었음을 확인합니다.
+1. 验证角色分配是否成功。
 
->**검토**: 이 연습에서는 서비스 주체를 만들고 Contributor 역할을 할당했습니다. 
+>回顾：在本练习中，你创建了服务主体，并为其分配了参与者角色。 
