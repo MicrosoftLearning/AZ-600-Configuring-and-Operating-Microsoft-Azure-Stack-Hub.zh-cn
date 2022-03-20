@@ -1,130 +1,135 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub에서 로그 수집 관리'
-    module: '모듈 5: 인프라 관리'
+  title: 实验室：在 Azure Stack Hub 中管理日志收集
+  module: 'Module 5: Manage Infrastructure'
+ms.openlocfilehash: 390643cfd94ddc4364e44c7c20d160d33b231eb7
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251630"
 ---
+# <a name="lab---manage-log-collection-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理日志收集
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub에서 로그 수집 관리
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要确定收集日志的方法。
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 로그 수집을 수행할 방법을 확인해야 합니다.
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 执行 Azure Stack Hub 日志收集
 
-- Azure Stack Hub 로그 수집 수행
+## <a name="lab-environment"></a>实验室环境 
 
-## 랩 환경 
+实验室环境由以下部分组成：
 
-랩 환경에는 다음과 같은 구성 요소가 포함됩니다.
+- 在具有以下接入点的 AzSHOST-1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
-
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
-
-
-### 연습 1: Azure Stack Hub 진단 로그 수집 기능 살펴보기
-
-이 연습에서는 진단 로그 수집 옵션 관리를 위한 여러 가지 옵션을 살펴봅니다.
-
-1. 자동 관리 진단 로그 수집 사용
-1. 요청 시 진단 로그 전송
-1. 로컬 파일 공유에 진단 로그 복사
-
-#### 작업 1: 자동 관리 진단 로그 수집 사용
-
-이 작업에서는 다음을 수행합니다.
-
-- 자동 관리 로그 수집 사용
-
->**참고**: 자동 관리 로그 수집에서는 지원 사례를 개설하기 전에 진단 로그를 자동 수집하여 Azure Stack Hub에서 Microsoft로 전송합니다. 이러한 로그는 시스템 상태 경고 발생 시에만 수집되며, 지원 사례 해결을 위해 필요한 상황에서 Microsoft 지원 담당자만 로그에 액세스합니다.
-
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzSHOST-1**에 로그인합니다.
-
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창의 허브 메뉴에서 **도움말 + 지원**을 클릭합니다.
-1. **개요** 블레이드에서 **로그 수집**을 클릭합니다.
-1. **개요 \| 로그 수집** 블레이드에서 **자동 관리 로그 수집 사용**을 클릭합니다.
-
-    >**참고**: **자동 관리 로그 수집 사용** 옵션을 사용할 수 없으면 다음 단계로 바로 넘어가세요. 
-
-1. **설정** 블레이드에서 다음 설정을 지정하고 **저장**을 클릭합니다.
-
-    - 자동 관리 로그 수집: **사용**
-    - 로그 위치: **Azure(권장)**
-
-1. **개요 \| 로그 수집** 블레이드로 돌아온 다음 **설정**을 클릭하여 지정한 설정에 따라 자동 관리 로그 수집이 구성되었는지 확인합니다.
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
 
-#### 작업 2: 요청 시 진단 로그 전송
+### <a name="exercise-1-explore-azure-stack-hub-diagnostic-logs-collection-capabilities"></a>练习 1：探索 Azure Stack Hub 诊断日志收集功能
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将探索用于管理诊断日志收集的各个选项。
 
-- Azure Stack Hub 관리 포털을 사용하여 요청 시 진단 로그 전송
-- Azure Stack Hub PowerShell을 사용하여 요청 시 진단 로그 전송 
+1. 启用主动诊断日志收集
+1. 按需发送诊断日志
+1. 将诊断日志复制到本地文件共享
 
->**참고**: 이 기능의 명칭은 *지금 로그 보내기*입니다.
+#### <a name="task-1-enable-proactive-diagnostic-log-collection"></a>任务 1：启用主动诊断日志收集
 
->**참고**: 먼저 Azure Stack Hub 관리 포털을 사용하여 요청 시 진단 로그를 전송합니다.
+在此任务中，你将：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창 허브 메뉴에서 **도움말 + 지원**을 클릭합니다.
-1. **개요** 블레이드에서 **로그 수집**을 클릭합니다.
-1. **개요 \| 로그 수집** 블레이드에서 **지금 로그 보내기**를 클릭합니다.
-1. **지금 로그 보내기** 블레이드에서 다음 설정을 지정하고 **수집 + 업로드**를 클릭합니다.
+- 启用主动日志收集。
 
-    - 시작: 현재 날짜와 시간 - 3시간
-    - 종료: 현재 날짜 및 시간
+>**注意**：打开支持案例前，主动日志收集会自动收集诊断日志并将其从 Azure Stack Hub 发送到 Microsoft。 这些日志仅在发出了系统运行状况警报的情况下收集，并且仅在建立了支持案例的情况下供 Microsoft 支持部门访问。
 
-    >**참고**: 업로드가 완료될 때까지 기다리지 말고 다음 단계를 진행하세요. 이 로그 수집은 실패합니다. 랩 환경에서 대상 Azure 구독에 직접 액세스할 수 없으므로, 이 실패는 정상적인 현상입니다.
+1. 如果需要，请使用以下凭据登录到 AzSHOST-1：
 
-    >**참고**: 이제 Azure Stack Hub PowerShell을 사용하여 동일 기능을 구성합니다. 이 구성을 수행하려면 권한 있는 엔드포인트에 연결해야 합니다.
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell ISE를 시작합니다.
-1. **관리자: Windows PowerShell ISE** 콘솔에서 다음 명령을 실행하여 권한 있는 엔드포인트를 실행 중인 인프라 VM의 IP 주소를 확인합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击主菜单中的“帮助 + 支持”。
+1. 在“概述”边栏选项卡中，单击“日志收集” 。
+1. 在“概述 \| 日志收集”边栏选项卡中，单击“启用主动日志收集” 。
+
+    >**注意**：如果“启用主动日志收集”选项不可用，请直接进行下一步。 
+
+1. 在“设置”边栏选项卡上，指定以下设置并单击“保存”。
+
+    - 主动日志收集：启用
+    - 日志位置：Azure（推荐）
+
+1. 返回“概述 \| 日志收集”边栏选项卡，单击“设置”以验证是否根据指定的设置配置了主动日志收集 。
+
+
+#### <a name="task-2-send-diagnostic-logs-on-demand"></a>任务 2：按需发送诊断日志
+
+在此任务中，你将：
+
+- 使用 Azure Stack Hub 管理门户按需发送诊断日志。
+- 使用 Azure Stack Hub PowerShell 按需发送诊断日志。 
+
+>**注意**：此功能称为“立即发送日志”
+
+>**注意**：首先，你将使用 Azure Stack Hub 管理门户按需发送诊断日志。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口的主菜单中，单击“帮助 + 支持” 。
+1. 在“概述”边栏选项卡中，单击“日志收集” 。
+1. 在“概述 \| 日志收集”边栏选项卡中，单击“立即发送日志” 。
+1. 在“立即发送日志”边栏选项卡上，指定以下设置并单击“收集 + 上传” 。
+
+    - 开始时间：当前日期和时间 - 3 小时
+    - 结束时间：当前日期和时间
+
+    >**注意**：不要等待上传完成，而是继续执行下一步。 日志收集将失败。 这是意料之中的，因为无法从实验室环境直接访问目标 Azure 订阅。
+
+    >**注意**：现在，你将使用 Azure Stack Hub PowerShell 配置等效功能。 这需要连接到特权终结点。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，以管理员身份启动 PowerShell ISE。
+1. 在“Administrator: Windows PowerShell ISE”控制台中运行以下命令，确定运行特权终结点的基础结构 VM 的 IP 地址：
 
     ```powershell
     $ipAddress = (Resolve-DnsName -Name AzS-ERCS01).IPAddress
     ```
 
-1. **관리자: Windows PowerShell ISE** 창에서 다음 명령을 실행하여 권한 있는 엔드포인트를 실행 중인 인프라 VM의 IP 주소를 WinRM 신뢰할 수 있는 호스트 목록에 추가합니다(모든 호스트가 이미 허용되어 있는 경우는 제외).
+1. 在“Administrator: Windows PowerShell ISE”窗口运行以下命令，将运行特权终结点的基础结构 VM 的 IP 地址添加到 WinRM 受信任主机列表中（除非已允许所有主机）：
 
     ```powershell
     $trustedHosts = (Get-Item -Path WSMan:\localhost\Client\TrustedHosts).Value
     If ($trustedHosts -ne '*') {
-	If ($trustedHosts -ne '') {
-		$trustedHosts += ",ipAddress"
-	} else {
-	$trustedHosts = "$ipAddress"
-	}
+    If ($trustedHosts -ne '') {
+        $trustedHosts += ",ipAddress"
+    } else {
+    $trustedHosts = "$ipAddress"
+    }
     }
     Set-Item WSMan:\localhost\Client\TrustedHosts -Value $TrustedHosts -Force
     ```
 
-1. **관리자: Windows PowerShell ISE** 창에서 다음 명령을 실행하여 변수에 Azure Stack Hub 관리자 자격 증명을 저장합니다.
+1. 在“Administrator: Windows PowerShell ISE”窗口运行以下命令，将 Azure Stack Hub 管理员凭据存储在变量中：
 
     ```powershell
     $adminUserName = 'CloudAdmin@azurestack.local'
@@ -132,91 +137,101 @@ lab:
     $adminCredentials = New-Object PSCredential($adminUserName,$adminPassword)
     ```
 
-1. **관리자: Windows PowerShell ISE** 창에서 다음 명령을 실행하여 권한 있는 엔드포인트에 대한 PowerShell 원격 세션을 설정합니다.
+1. 在“Administrator: Windows PowerShell ISE”窗口运行以下命令，建立与特权终结点的 PowerShell 远程处理会话：
 
     ```powershell
-    Enter-PSSession -ComputerName $ipAddress -ConfigurationName PrivilegedEndpoint -Credential $adminCredentials
+    $session = New-PSSession -ComputerName $ipAddress -ConfigurationName PrivilegedEndpoint -Credential $adminCredentials
+    Enter-PSSession -Session $session
     ```
 
-    >**참고**: PowerShell 원격 세션이 정상적으로 설정되었는지 확인합니다. 세션이 정상적으로 설정되면 권한 있는 엔드포인트를 실행 중인 인프라 VM의 IP 주소로 시작하는 프롬프트가 Windows PowerShell ISE 창의 콘솔 창에서 대괄호 안에 표시되어야 합니다.
+    >**注意**：验证是否已成功建立 PowerShell 远程处理会话。 “Windows PowerShell ISE”窗口中的“控制台”窗格应显示用方括号括起来的提示，该提示以运行特权终结点的基础结构 VM 的 IP 地址开头。
 
-1. **관리자: Windows PowerShell ISE** 창의 콘솔 창 내 PowerShell 원격 세션에서 다음 명령을 실행하여 요청 시 Azure Stack Hub 스토리지 진단 로그를 전송합니다.
+1. 在“Administrator: Windows PowerShell ISE”窗口的控制台窗格中的 PowerShell 远程处理会话运行以下命令，按需发送 Azure Stack Hub 存储诊断日志：
 
     ```powershell
     Send-AzureStackDiagnosticLog -FilterByRole Storage
     ```
 
-    >**참고**: 업로드가 완료될 때까지 기다리지 말고 다음 단계를 진행하세요. 이 로그 수집은 실패합니다. 랩 환경에서 대상 Azure 구독에 직접 액세스할 수 없으므로, 이 실패는 정상적인 현상입니다.
+    >**注意**：不要等待上传完成，而是继续执行下一步。 如果无法从实验室环境直接访问目标 Azure 订阅，日志收集可能会失败。
 
-    >**참고**: 역할을 기준으로 로그를 필터링할 수도 있고, 로그를 수집할 기간을 지정할 수도 있습니다. 자세한 내용은 [진단 로그 수집](https://docs.microsoft.com/ko-kr/azure/azure-stack/azure-stack-diagnostics)을 참조하세요.
-
-
-#### 작업 3: 로컬 파일 공유에 진단 로그 복사
-
-이 작업에서는 다음을 수행합니다.
-
-- Azure Stack Hub 관리 포털을 사용하여 로컬 파일 공유에 진단 로그 복사
-- Azure Stack Hub PowerShell을 사용하여 로컬 파일 공유에 진단 로그 복사 
-
->**참고**: 먼저 로그를 저장할 파일 공유를 만듭니다.
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 파일 탐색기를 시작합니다. 
-1. 파일 탐색기에서 새 폴더 **C:\\AzSHLogs**를 만듭니다.
-1. 파일 탐색기에서 **AzSHLogs** 폴더를 마우스 오른쪽 단추로 클릭하고 오른쪽 클릭 메뉴에서 **속성**을 클릭합니다.
-1. **AzSHLogs 속성** 창에서 **공유** 탭을 클릭한 다음 **고급 공유**를 클릭합니다.
-1. **고급 공유** 대화 상자에서 **이 폴더 공유**를 클릭한 다음 **권한**을 클릭합니다.
-1. **AzSHLogs에 대한 권한** 창에서 **모든 사용자** 항목이 선택되어 있는지 확인하고 **제거**를 클릭합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에 **CloudAdmins**를 입력한 후에 **확인**을 클릭합니다.
-1. **CloudAdmins** 항목이 선택되어 있는지 확인하고 **허용** 열에서 **모든 권한** 체크박스를 선택합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에서 **위치**를 클릭합니다.
-1. **위치** 대화 상자에서 로컬 컴퓨터를 나타내는 항목(**AzS-HOST1**)을 클릭하고 **확인**을 클릭합니다.
-1. **선택할 개체 이름 입력** 텍스트 상자에 **Administrators**를 입력하고 **확인**을 클릭합니다.
-1. **Administrators** 항목이 선택되어 있는지 확인하고 **허용** 열에서 **모든 권한** 체크박스를 클릭한 후에 **확인**을 클릭합니다.
-1. **고급 공유** 대화 상자로 돌아와서 **확인**을 클릭합니다.
-1. **AzSHLogs 속성** 창으로 돌아와서 **보안** 탭을 클릭한 다음 **편집**을 클릭합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에 **CloudAdmins**를 입력한 후에 **확인**을 클릭합니다.
-1. **AzSHLogs에 대한 권한** 대화 상자의 **그룹 또는 사용자 이름** 창에 있는 항목 목록에서 **CloudAdmins**를 클릭합니다. 그런 다음 **CloudAdmins에 대한 권한** 창의 **허용** 열에서 **모든 권한**을 클릭하고 **확인**을 클릭합니다.
-1. **AzSHLogs 속성** 창으로 돌아와서 **닫기**를 클릭합니다.
-
-    >**참고**: 다음으로는 Azure Stack Hub 관리 포털에서, 또는 권한 있는 엔드포인트를 통해 파일 공유로의 진단 로그 수집을 구성할 수 있습니다.
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창 허브 메뉴에서 **도움말 + 지원**을 클릭합니다.
-1. **개요** 블레이드에서 **로그 수집**을 클릭합니다.
-1. **개요 \| 로그 수집** 블레이드에서 **설정**을 클릭합니다.
-1. **설정** 블레이드에서 **로그 위치** 옵션을 **Azure(권장)** 에서 **로컬 파일 공유**로 변경하고 다음 설정을 지정합니다.
-
-    - SMB 파일 공유 경로: **\\\\AzS-HOST1.azurestack.local\\AzSHLogs**
-    - 사용자 이름: **AZURESTACK\\AzureStackAdmin**
-    - 암호: **Pa55w.rd1234**
-
-1. **설정** 블레이드에서 **저장**을 클릭합니다.
-1. **개요 \| 로그 수집** 블레이드에서 **지금 로그 보내기**를 클릭합니다.
-1. **지금 로그 보내기** 블레이드에서 다음 설정을 지정하고 **수집 + 업로드**를 클릭합니다.
-
-    - 시작: 현재 날짜와 시간 - 3시간
-    - 종료: 현재 날짜 및 시간
-
-    >**참고**: 로그 수집 및 업로드 진행률을 확인하려면 **개요 \| 로그 수집** 블레이드에서 **새로 고침**을 클릭합니다.
-
-    >**참고**: 업로드가 완료될 때까지 기다리지 말고 다음 단계를 진행하세요. 이번에는 로그 수집이 성공하지만 수집이 완료되려면 15분 정도 걸릴 수 있습니다. 
-
-    >**참고**: 이제 Azure Stack Hub PowerShell을 사용하여 동일 기능을 구성합니다. 이 구성을 수행하려면 권한 있는 엔드포인트에 연결해야 합니다.
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 이전 작업에서 권한 있는 엔드포인트에 연결했던 **관리자: Windows PowerShell** 콘솔로 다시 전환합니다.
-1. **관리자: Windows PowerShell** 창의 콘솔 창 내 PowerShell 원격 세션에서 다음 명령을 실행하여 로컬 파일 공유에 Azure Stack Hub 스토리지 진단 로그를 복사합니다.
+1. 在“Administrator: Windows PowerShell ISE”窗口的控制台窗格的 PowerShell 远程处理会话中，按 Ctrl+C 终止日志收集，然后运行以下命令退出交互式会话（无需终止该会话） ：
 
     ```powershell
-    Get-AzureStackLog -OutputSharePath '\\AzS-HOST1.azurestack.local\AzSHLogs' -OutputShareCredential $using:adminCredentials -FilterByRole Storage
+    Exit-PSSession
     ```
 
-1. cmdlet 실행이 완료될 때까지 기다렸다가 파일 탐색기에서 **C:\\AzSHLogs** 폴더의 내용을 검토합니다.
+    >**注意**：你可以选择按角色筛选，也可以指定应收集日志的时段。 有关详细信息，请参阅[诊断日志收集](https://docs.microsoft.com/en-us/azure/azure-stack/azure-stack-diagnostics)。
 
-    >**참고**: 이 폴더에는 앞에서 시작한 개별 복사 작업에 해당하는 폴더가 포함되어 있어야 합니다. 폴더 이름의 형식은 **AzureStackLogs-*YYYYMMDDHHMMSS*-AZS-ERCS01**이어야 합니다. 여기서 ***YYYYMMDDHHMMSS***는 복사본의 타임스탬프를 나타냅니다.
 
-1. **관리자: Windows PowerShell** 창의 PowerShell 원격 세션 프롬프트에서 다음 명령을 실행하여 세션을 닫습니다.
+#### <a name="task-3-copy-diagnostic-logs-to-a-local-file-share"></a>任务 3：将诊断日志复制到本地文件共享
+
+在此任务中，你将：
+
+- 使用 Azure Stack Hub 管理门户将诊断日志复制到本地文件共享。
+- 使用 Azure Stack Hub PowerShell 将诊断日志复制到本地文件共享。 
+
+>**注意**：首先，你将创建一个文件共享来存储日志。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，启动文件资源管理器。 
+1. 在文件资源管理器中，创建一个新文件夹 C:\\AzSHLogs。
+1. 在文件资源管理器中，右键单击 AzSHLogs 文件夹，然后在右键单击菜单中，单击“属性” 。
+1. 在“AzSHLogs 属性”窗口中，单击“共享”选项卡，然后单击“高级共享”  。
+1. 在“高级共享”对话框中，单击“共享此文件夹”，然后单击“权限”  。
+1. 在“AzSHLogs 的权限”窗口中，确保选中“所有人”条目，然后单击“删除”  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，键入 CloudAdmins，然后单击“确定”   。
+1. 确保已选中“CloudAdmins”条目，然后单击“允许”列中的“完全控制”复选框  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，单击“位置”  。
+1. 在“位置”对话框中，单击代表本地计算机 (AzSHOST-1) 的条目，然后单击“确定”  。
+1. 在“输入要选择的对象名称”文本框中，键入“管理员”，然后单击“确定”  。
+1. 确保选中“管理员”条目，单击“允许”列中的“完全控制”复选框，然后单击“确定”   。
+1. 返回“高级共享”对话框，单击“确定” 。
+1. 返回“AzSHLogs 属性”窗口，单击“安全性”选项卡，然后单击“编辑”  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，键入 CloudAdmins，然后单击“确定”   。
+1. 在“AzSHLogs 的权限”对话框的“组或用户名称”窗格中的条目列表中，单击“CloudAdmins”，在“CloudAdmins 的权限”窗格中，单击“允许”列中的“完全控制”，然后单击“确定”      。
+1. 返回“AzSHLogs 属性”窗口，单击“关闭” 。
+
+    >**注意**：接下来，你可以从 Azure Stack Hub 管理门户或通过特权终结点将诊断日志收集配置为文件共享。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口的主菜单中，单击“帮助 + 支持” 。
+1. 在“概述”边栏选项卡中，单击“日志收集” 。
+1. 在“概述 \| 日志收集”边栏选项卡中，单击“设置” 。
+1. 在“设置”边栏选项卡上，将“日志位置”选项从“Azure(推荐)”更改为“本地文件共享”，并指定以下设置   ：
+
+    - SMB 文件共享路径：\\\\AzSHOST-1.azurestack.local\\AzSHLogs
+    - 用户名：AZURESTACK\\AzureStackAdmin
+    - 密码：Pa55w.rd1234
+
+1. 在“设置”边栏选项卡中，单击“保存” 。
+1. 返回“概述 \| 日志收集”边栏选项卡，单击“立即发送日志” 。
+1. 在“立即发送日志”边栏选项卡上，指定以下设置并单击“收集 + 上传” 。
+
+    - 开始时间：当前日期和时间 - 3 小时
+    - 结束时间：当前日期和时间
+
+    >**注意**：若要查看日志收集和上传的进度，请在“概述 \| 日志收集”边栏选项卡上，单击“刷新” 。
+
+    >**注意**：不要等待上传完成，而是继续执行下一步。 日志收集应该会成功，但是可能需要大约 15 分钟才能完成。 
+
+    >**注意**：现在，你将使用 Azure Stack Hub PowerShell 配置等效功能。 这需要连接到特权终结点。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，切换回“Administrator:  Windows PowerShell ISE”控制台，你在上个任务中已在此控制台中启用对特权终结点的 PowerShell 远程会话。
+1. 从“Administrator: Windows PowerShell ISE”窗口的控制台窗格，运行以下命令，将 Azure Stack Hub 存储诊断日志复制到本地文件共享：
 
     ```powershell
-    Close-PrivilegedEndpoint -TranscriptsPathDestination '\\AzS-HOST1.azurestack.local\AzSHLogs' -Credential $using:adminCredentials
+    Invoke-Command -Session $session { Get-AzureStackLog -OutputSharePath '\\AzSHOST-1.azurestack.local\AzSHLogs' -OutputShareCredential $using:adminCredentials -FilterByRole Storage}
     ```
 
->**검토**: 이 연습에서는 권한 있는 엔드포인트로의 PowerShell 원격 세션을 설정했으며 해당 엔드포인트에서 사용 가능한 PowerShell cmdlet을 사용하여 진단 로그를 수집했습니다.
+1. 等待该 cmdlet 完成，然后在文件资源管理器中查看 C:\\AzSHLogs 文件夹的内容以验证日志已上传。
+
+    >**注意**：该文件夹应包含与你启动的每个单独副本相对应的文件夹。 这些文件夹的名称应采用 AzureStackLogs-YYYYMMDDHHMMSS-AZS-ERCS01 格式，其中 YYYYMMDDHHMMSS 表示副本的时间戳 。
+
+1. 在“Administrator: Windows PowerShell”窗口的 PowerShell 远程处理会话提示符下，运行以下命令以关闭该会话：
+
+    ```powershell
+    Enter-PSSession -$session
+    Close-PrivilegedEndpoint -TranscriptsPathDestination '\\AzSHOST-1.azurestack.local\AzSHLogs' -Credential $using:adminCredentials
+    ```
+
+1. 等待该 cmdlet 完成，然后在文件资源管理器中查看 C:\\AzSHLogs 文件夹的内容以验证会话脚本已上传。
+
+>回顾：在本练习中，你建立了与特权终结点的 PowerShell 远程处理会话，并使用了该终结点提供的 PowerShell cmdlet 来收集诊断日志。

@@ -1,115 +1,124 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub를 사용하여 ARM(Azure Resource Manager) 템플릿 유효성 검사'
-    module: '모듈 2: 서비스 제공'
+  title: 实验室：使用 Azure Stack Hub 验证 Azure 资源管理器 (ARM) 模板
+  module: 'Module 2: Provide Services'
+ms.openlocfilehash: ac5c390449e293632dba9858773d5a50f98fb23c
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251645"
 ---
+# <a name="lab---validate-azure-resource-manager-arm-templates-with-azure-stack-hub"></a>实验室 - 使用 Azure Stack Hub 验证 Azure 资源管理器 (ARM) 模板
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub를 사용하여 ARM(Azure Resource Manager) 템플릿 유효성 검사
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要使用现有的 Azure 资源管理器 (ARM) 模板来自动部署 Azure Stack Hub 资源。 
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 기존 ARM(Azure Resource Manager) 템플릿을 사용하여 Azure Stack Hub 리소스 배포를 자동화해야 합니다. 
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 验证 Azure Stack Hub 部署的 ARM 模板。
 
-- Azure Stack Hub 배포에 사용 가능한지 ARM 템플릿 유효성 검사
+## <a name="lab-environment"></a>实验室环境
 
-## 랩 환경
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境具有以下配置：
 
-랩 환경의 구성은 다음과 같습니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
-
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 
-
-
-### 연습 1: Azure Stack Hub를 사용하여 ARM 템플릿 유효성 검사
-
-이 연습에서는 Azure Stack Hub를 사용하여 ARM 템플릿의 유효성을 검사합니다.
-
-1. 클라우드 기능 파일 작성 
-1. 템플릿 유효성 검사 정상 실행
-1. 실패하는 템플릿 유효성 검사 실행
-1. 템플릿 문제 수정
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 
 
 
-#### 작업 1: 클라우드 기능 파일 작성
+### <a name="exercise-1-validate-an-arm-template-with-azure-stack-hub"></a>练习 1：使用 Azure Stack Hub 验证 ARM 模板
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将使用 Azure Stack Hub 验证 ARM 模板。
 
-- 클라우드 기능 파일 작성
+1. 生成云功能文件 
+1. 运行成功的模板验证
+1. 运行失败的模板验证
+1. 修正模板问题
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+#### <a name="task-1-build-a-cloud-capabilities-file"></a>任务 1：生成云功能文件
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 신뢰할 수 있는 리포지토리로 PowerShell 갤러리를 구성합니다.
+在此任务中，你将：
+
+- 生成云功能文件
+
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
+
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
+
+1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 PowerShell。
+1. 在“Administrator: Windows PowerShell”提示符运行以下命令，将 PowerShell 库配置为受信任的存储库
 
     ```powershell
     Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 PowerShellGet을 설치합니다.
+1. 在“Administrator: Windows PowerShell”提示符运行以下命令，以安装 PowerShellGet：
 
     ```powershell
     Install-Module PowerShellGet -MinimumVersion 2.2.3 -Force
     ```
 
-    >**참고**: 사용 중인 모듈 관련 경고 메시지는 무시하세요.
+    >**注意**：忽略有关正在使用的模块的任何警告消息。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub용 PowerShell Az 모듈을 설치합니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，为 Azure Stack Hub 安装 PowerShell Az 模块：
+
+1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在与 AzS-HOST1 的远程桌面会话中，从“Administrator:  Windows PowerShell”提示符运行以下命令，安装本实验室所需的 Azure Stack Hub PowerShell 模块： 
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Install-Module -Name Az.BootStrapper -Force -AllowPrerelease -AllowClobber
-    Install-AzProfile -Profile 2019-03-01-hybrid -Force
-    Install-Module -Name AzureStack -RequiredVersion 2.0.2-preview -AllowPrerelease
+    Install-Module -Name Az.BootStrapper -Force
+    Install-AzProfile -Profile 2020-09-01-hybrid -Force
+    Install-Module -Name AzureStack -RequiredVersion 2.2.0 
     ```
 
-    >**참고**: 이미 사용 가능한 명령 관련 오류 메시지는 무시하세요.
+    >**注意**：忽略有关已可用命令的任何错误消息。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Hub 운영자 PowerShell 환경을 등록합니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，注册 Azure Stack Hub 操作员 PowerShell 环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackAdmin' -ArmEndpoint 'https://adminmanagement.local.azurestack.external' `
        -AzureKeyVaultDnsSuffix adminvault.local.azurestack.external `
        -AzureKeyVaultServiceEndpointResourceId https://adminvault.local.azurestack.external
+    ```   
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 새로 등록한 **AzureStackAdmin** 환경에 로그인합니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，登录到新注册的 AzureStackAdmin 环境：
 
     ```powershell
     Connect-AzAccount -EnvironmentName 'AzureStackAdmin'
     ```
 
-1. 메시지가 표시되면 **CloudAdmin@azurestack.local** 계정으로 인증을 진행합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Tools를 다운로드합니다.
+1. 如果系统提示，请使用 CloudAdmin@azurestack.local 帐户和密码 Pa55w.rd1234 进行身份验证 。
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，以下载 Azure Stack Tools：
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -119,15 +128,15 @@ lab:
     Set-Location -Path '\AzureStack-Tools-az'
     ```
 
-    >**참고**: 이 단계에서는 Azure Stack Hub 도구를 호스트하는 GitHub 리포지토리가 포함된 보관 파일을 로컬 컴퓨터에 복사한 다음 **C:\\AzureStack-Tools-master** 폴더로 확장합니다. 이 도구에는 Azure Stack Hub Resource Manager 템플릿 유효성 검사를 비롯한 폭넓은 기능을 제공하는 PowerShell 모듈이 포함되어 있습니다. 
+    >**注意**：此步骤将包含托管 Azure Stack Hub 工具的 GitHub 存储库的存档复制到本地计算机，并将存档扩展到 C:\\AzureStack-Tools-master 文件夹。 这些工具包含提供了一系列功能的 PowerShell 模块，其中包括对 Azure Stack Hub 资源管理器模板进行验证的功能。 
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 AzureRM.CloudCapabilities PowerShell 모듈을 가져옵니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，导入 AzureRM.CloudCapabilities PowerShell 模块：
 
     ```powershell
     Import-Module .\CloudCapabilities\Az.CloudCapabilities.psm1 -Force
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 클라우드 기능 JSON 파일을 생성합니다. 
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，生成云功能 JSON 文件： 
 
     ```powershell
     $path = 'C:\Templates'
@@ -135,31 +144,31 @@ lab:
     Get-AzCloudCapability -Location 'local' -OutputPath $path\AzureCloudCapabilities.Json -Verbose
     ```
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 파일 탐색기를 시작하고 **C:\\Templates** 폴더로 이동한 다음 **AzureCloudCapabilities.Json** 파일이 정상적으로 작성되었는지 확인합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，启动文件资源管理器，导航到 C:\\Templates 文件夹并验证是否已成功创建 AzureCloudCapabilities.Json 文件  。
 
-#### 작업 2: 템플릿 유효성 검사 정상 실행
+#### <a name="task-2-run-a-successful-template-validation"></a>任务 2：运行成功的模板验证
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure Stack Hub 빠른 시작 템플릿을 대상으로 템플릿 유효성 검사기 실행
+- 针对 Azure Stack Hub 快速启动模板运行模板验证器
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저를 시작하고 Azure Stack Hub 빠른 시작 템플릿 리포지토리 [**MySql Server on Windows for AzureStack** 페이지](https://github.com/Azure/AzureStack-QuickStart-Templates/tree/master/mysql-standalone-server-windows)로 이동합니다. 
-1. **MySql Server on Windows for AzureStack** 페이지에서 **azuredeploy.json**을 클릭합니다.
-1. [AzureStack-QuickStart-Templates/mysql-standalone-server-windows/azuredeploy.json](https://github.com/Azure/AzureStack-QuickStart-Templates/blob/master/mysql-standalone-server-windows/azuredeploy.json) 페이지에서 템플릿의 내용을 검토합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창으로 전환한 후 다음 명령을 실행하여 azuredeploy.json 파일을 다운로드한 다음 **C:\\Templates** 폴더에 **sampletemplate1.json** 파일로 저장합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，启动 Web 浏览器，然后导航到 Azure Stack Hub 快速启动模板存储库[适用于 AzureStack 的 Windows 上的 MySql Server 页面](https://github.com/Azure/AzureStack-QuickStart-Templates/tree/master/mysql-standalone-server-windows)。 
+1. 在“适用于 AzureStack 的 Windows 上的 MySql Server”页面，单击 azuredeploy.json 。
+1. 在 [AzureStack-QuickStart-Templates/mysql-standalone-server-windows/azuredeploy.json](https://github.com/Azure/AzureStack-QuickStart-Templates/blob/master/mysql-standalone-server-windows/azuredeploy.json) 页面，查看模板的内容。
+1. 切换到“Administrator: Windows PowerShell”窗口运行以下命令，下载 azuredeploy.json 文件，然后在 C:\\Templates 文件夹中将其另存为名为 sampletemplate1.json 的文件 。
 
     ```powershell
     Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Azure/AzureStack-QuickStart-Templates/master/mysql-standalone-server-windows/azuredeploy.json' -UseBasicParsing -OutFile $path\sampletemplate1.json
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 AzureRM.TemplateValidator PowerShell 모듈을 가져옵니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，导入 AzureRM.TemplateValidator PowerShell 模块：
 
     ```powershell
     Set-Location -Path 'C:\AzureStack-Tools-az\TemplateValidator'
     Import-Module .\AzureRM.TemplateValidator.psm1 -Force
     ```
   
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 템플릿의 유효성을 검사합니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，验证模板：
 
     ```powershell
     Test-AzureRMTemplate `
@@ -172,9 +181,9 @@ lab:
         -Verbose
     ```
 
-1. 유효성 검사의 출력을 검토하여 문제가 없는지 확인합니다.
+1. 查看验证的输出并确认没有问题。
 
-    >**참고**: 출력은 다음과 같은 형식이어야 합니다.
+    >**注意**：输出格式应如下所示：
 
     ```
     Validation Summary:
@@ -187,33 +196,33 @@ lab:
     Report available at - C:\AzureStack-Tools-az\TemplateValidator\sampletemplate1validationreport.html
     ```
 
-#### 작업 3: 실패하는 템플릿 유효성 검사 실행
+#### <a name="task-3-run-a-failed-template-validation"></a>任务 3：运行失败的模板验证
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure 빠른 시작 템플릿을 대상으로 템플릿 유효성 검사기 실행
+- 针对 Azure 快速启动模板运行模板验证器
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 빠른 시작 템플릿 리포지토리가 표시된 웹 브라우저에서 Azure 빠른 시작 템플릿 리포지토리 [**MySQL Server 5.6 on Ubuntu VM** 페이지](https://github.com/Azure/azure-quickstart-templates/tree/master/mysql-standalone-server-ubuntu)로 이동합니다.
-1. **MySQL Server 5.6 on Ubuntu VM** 페이지에서 **azuredeploy.json**을 클릭합니다.
-1. [azure-quickstart-templates/mysql-standalone-server-ubuntu/azuredeploy.json](https://github.com/Azure/azure-quickstart-templates/blob/master/mysql-standalone-server-ubuntu/azuredeploy.json) 페이지에서 템플릿의 내용을 검토합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창으로 전환한 후 다음 명령을 실행하여 azuredeploy.json 파일을 다운로드한 다음 **C:\\Templates** 폴더에 **sampletemplate2.json** 파일로 저장합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，从显示 AzureStack 快速启动模板存储库的 Web 浏览器导航到 Azure 快速启动模板存储库 [Ubuntu VM 上的 MySQL Server 5.6 页面](https://github.com/Azure/azure-quickstart-templates/tree/master/application-workloads/mysql/mysql-standalone-server-ubuntu)
+1. 在“Ubuntu VM 上的 MySQL Server 5.6”页面，单击 azuredeploy.json 。
+1. 在 [azure-quickstart-templates/mysql-standalone-server-ubuntu/azuredeploy.json](https://github.com/Azure/azure-quickstart-templates/blob/master/application-workloads/mysql/mysql-standalone-server-ubuntu/azuredeploy.json) 页面，查看模板的内容。
+1. 切换到“Administrator: Windows PowerShell”窗口运行以下命令，下载 azuredeploy.json 文件，然后在 C:\\Templates 文件夹中将其另存为名为 sampletemplate2.json 的文件 。
 
     ```powershell
-    Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/mysql-standalone-server-ubuntu/azuredeploy.json' -UseBasicParsing -OutFile $path\sampletemplate2.json
+    Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/mysql/mysql-standalone-server-ubuntu/azuredeploy.json' -UseBasicParsing -OutFile $path\sampletemplate2.json
     ```
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 웹 브라우저에서 [Virtual Machines](https://docs.microsoft.com/ko-kr/rest/api/compute/virtualmachines)의 REST API 참조로 이동하여 최신 Azure API 버전(이 콘텐츠 작성 시점에서는 **2020-12-01**)을 확인합니다. 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 메모장에서 **sampletemplate2.json** 파일을 엽니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，打开 Web 浏览器，导航到[虚拟机](https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines)的 REST API 参考，并标识最新版 Azure API（创作此内容时为 2020-12-01） 。 
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，在记事本中打开 sampletemplate2.json 文件。
 
     ```powershell
     notepad.exe $path\sampletemplate2.json
     ```
 
-1. **sampletemplate2.json** 파일의 내용이 표시된 메모장 창에서 템플릿 `resources` 섹션의 가상 머신 리소스를 나타내는 섹션을 찾습니다. 이 섹션의 내용은 다음과 같은 형식입니다.
+1. 在显示 sampletemplate2.json 文件的内容的记事本窗口中，在模板的 `resources` 一节中找到表示虚拟机资源的部分，其格式如下：
 
     ```json
     {
-      "apiVersion": "2017-06-01",
+      "apiVersion": "2017-03-30",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
       "location": "[parameters('location')]",
@@ -223,11 +232,11 @@ lab:
       ],
     ```
 
-1. `apiVersion` 키의 값을 이 작업 앞부분에서 확인한 가상 머신의 최신 Azure REST API 버전으로 설정하고 변경 내용을 저장합니다. 파일은 계속 열어 둡니다.
+1. 将 `apiVersion` 密钥的值设置为先前在该任务中标识的虚拟机的最新版 Azure REST API，然后保存更改并使文件保持打开状态。
 
-    >**참고**: 파일을 변경하기 전에 원래 값을 적어 두세요. 다음 작업에서 원래 값으로 되돌려야 합니다.
+    >**注意**：更改前，请记录原始值。 在下一任务中，你需将其恢复为原始值。
 
-    >**참고**: REST API 버전이 **2020-12-01**이라고 가정하는 경우 파일을 변경하면 다음과 같은 결과가 반환되어야 합니다.
+    >**注意**：假设 REST API 的版本为 2020-12-01，则更改应生成以下结果：
 
     ```json
     {
@@ -241,9 +250,9 @@ lab:
       ],
     ```
 
-    >**참고**: 여기에는 Azure Stack Hub에서 아직 지원되지 않는 구성이 의도적으로 포함되었습니다.
+    >**注意**：其中有意引入了 Azure Stack Hub 尚不支持的配置。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 새로 수정한 템플릿의 유효성을 검사합니다.
+1. 在“Administrator: Windows PowerShell”窗口运行以下命令，验证新修改的模板：
 
     ```powershell
     Test-AzureRMTemplate `
@@ -256,9 +265,9 @@ lab:
         -Verbose
     ```
 
-1. 유효성 검사의 출력을 검토하여 이번에는 지원 문제가 발생했음을 확인합니다.
+1. 查看验证的输出并注意是否存在可支持性问题。
 
-    >**참고**: 출력은 다음과 같은 형식이어야 합니다.
+    >**注意**：输出格式应如下所示：
 
     ```
     Validation Summary:
@@ -271,19 +280,19 @@ lab:
     Report available at - C:\AzureStack-Tools-az\TemplateValidator\sampletemplate2validationreport.html
     ```
 
-1. **C:\AzureStack-Tools-az\TemplateValidator\sampletemplate2validationreport.html** 파일을 열고 보고서를 검토합니다. 
+1. 打开 C:\AzureStack-Tools-az\TemplateValidator\sampletemplate2validationreport.html 文件，然后查看报表。 
 
-    >**참고**: 보고서에는 다음 형식의 항목이 포함되어 있어야 합니다. **NotSupported: apiversion (Resource type: Microsoft.Compute/virtualMachines). Not Supported Values - 2020-12-01**.
+    >**注意**：报表应包含以下格式的条目：**NotSupported: apiversion (Resource type:Microsoft.Compute/virtualMachines)。Not Supported Values - 2020-12-01**。
 
 
-#### 작업 4: 템플릿 문제 수정
+#### <a name="task-4-remediate-template-issues"></a>任务 4：修正模板问题
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 템플릿 문제 수정
+- 修正模板问题。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 파일 탐색기에서 **C:\\Templates** 폴더로 이동한 다음 **AzureCloudCapabilities.json** 파일을 엽니다.
-1. **AzureCloudCapabilities.json** 파일에서 `"ResourceTypeName": "virtualMachines",` 섹션을 찾습니다. 이 섹션의 내용은 다음과 같은 형식입니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，通过文件资源管理器，导航到 C:\\Templates 文件夹并打开 AzureCloudCapabilities.json 文件  。
+1. 在 **AzureCloudCapabilities** 文件中，找到 `"ResourceTypeName": "virtualMachines",` 部分，该部分应该采用以下格式：
 
     ```json
     {
@@ -301,7 +310,7 @@ lab:
         "2018-06-01",
         "2018-04-01",
         "2017-12-01",
-        "2017-06-01",
+        "2017-03-30",
         "2016-08-30",
         "2016-03-30",
         "2015-11-01",
@@ -314,8 +323,8 @@ lab:
     },
     ```
 
-1. **sampletemplate2.json** 파일로 전환하여 이전 작업에서 수정했던 REST API 버전의 값을 원래 값으로 변경합니다. 이 버전이 위에 나와 있는 **AzureCloudCapabilities.json**의 API 버전 중 하나와 일치하는지 확인하고 변경 내용을 저장합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 새로 수정한 템플릿의 유효성을 검사합니다.
+1. 切换到 sampletemplate2.json 文件，然后将在上一任务中修改过的 REST API 版本值更改为原始值。 确保此版本与上述 AzureCloudCapabilities.json 中的其中一个 API 版本匹配，然后保存更改。
+1. 切换到“Administrator: Windows PowerShell”窗口并运行以下命令，验证新修改的模板：
 
     ```powershell
     Test-AzureRMTemplate `
@@ -328,6 +337,7 @@ lab:
         -Verbose
     ```
 
-1. 유효성 검사의 출력을 검토하여 이번에는 문제가 없음을 확인합니다.
+1. 查看验证的输出，如果输出仍列出一个或多个 NotSupported 条目，请在 PowerShell 提示符处键入 `C:\AzureStack-Tools-az\TemplateValidator\sampletemplate1validationreport.html` 并按 Enter 键打开验证报告 。
+1. 查看报表，识别所有剩余问题，对 template2.json 文件进行适当的更改，再次重新运行模板验证，并验证这一次是否有问题。
 
->**검토**: 이 연습에서는 클라우드 기능 파일을 만든 후 Azure Resource Manager 템플릿의 유효성을 검사하는 데 사용했습니다. 그리고 유효성 검사 결과를 기반으로 템플릿을 수정했습니다.
+>回顾：在本练习中，你创建了一个云功能文件，并使用该文件验证了 Azure 资源管理器模板。 你还根据验证结果修改了模板。
