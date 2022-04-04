@@ -1,151 +1,156 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub에서 App Service 리소스 공급자 구현'
-    module: '모듈 2: 서비스 제공'
+  title: 实验室：在 Azure Stack Hub 中实现应用服务资源提供程序
+  module: 'Module 2: Provide Services'
+ms.openlocfilehash: 131748436ff67e32dd18e5ee5fb1fda7beedd2af
+ms.sourcegitcommit: 4949ab968553abc20d2d72d6fd30a33ffae0317a
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 01/13/2022
+ms.locfileid: "137893086"
 ---
+# <a name="lab---implement-app-service-resource-provider-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中实现应用服务资源提供程序
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub에서 App Service 리소스 공급자 구현
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 在 Azure Stack Hub 中实现 SQL Server 资源提供程序
 
-- Azure Stack Hub에서 SQL Server 리소스 공급자 구현
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+4 小时
 
-4시간
+## <a name="lab-scenario"></a>实验室场景
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要允许租户部署应用服务应用和 Azure Functions。
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 테넌트가 App Service 앱과 Azure 함수를 배포하도록 허용해야 합니다.
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+ - 在 Azure Stack Hub 中实现应用服务资源提供程序。
 
- - Azure Stack Hub에서 App Service 리소스 공급자 구현
+## <a name="lab-environment"></a>实验室环境 
 
-## 랩 환경 
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境具有以下配置：
 
-랩 환경의 구성은 다음과 같습니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
-
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 
-
-
-### 연습 1: Azure Stack Hub에서 App Service 리소스 공급자 설치
-
-이 연습에서는 Azure Stack Hub에서 App Service 리소스 공급자를 설치합니다.
-
-1. SQL Server 호스팅 서버 프로비전
-1. 파일 서버 프로비전
-1. App Service 리소스 공급자 설치
-1. App Service 리소스 공급자 설치 유효성 검사
-
->**참고**: 이 연습을 최대한 빠른 시간 내에 끝낼 수 있도록 Azure Stack Hub App Service 리소스 공급자를 설치하려면 수행해야 하는 다음을 비롯한 일부 작업은 이미 완료된 상태입니다.
-
-- Azure Marketplace 신디케이션 구현
-- 다음 Azure Marketplace 항목 다운로드:
-
-  - **[smalldisk] Windows Server 2019 Datacenter Server Core-Bring your own license**
-  - **Windows Server 2016 Datacenter-Bring your own license** 
-  - **사용자 지정 스크립트 확장**
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 
 
 
-#### 작업 1: SQL Server 호스팅 서버 프로비전
+### <a name="exercise-1-install-the-app-service-resource-provider-in-azure-stack-hub"></a>练习 1：在 Azure Stack Hub 中安装应用服务资源提供程序
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将在 Azure Stack Hub 中安装应用服务资源提供程序。
 
-- SQL Server 호스팅 서버 프로비전
+1. 预配 SQL Server 托管服务器
+1. 预配文件服务器
+1. 安装应用服务资源提供程序
+1. 验证应用服务资源提供程序的安装
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
+>**注意**：为了最大限度地缩短此练习的时长，安装 Azure Stack Hub 应用服务资源提供程序所需的一些任务已完成，包括：
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+- 实现 Azure 市场联合
+- 下载以下 Azure 市场项：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털의 허브 메뉴에서 **리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **컴퓨팅**을 선택하고 사용 가능한 리소스 종류 목록에서 **{WS-BYOL} 무료 SQL Server 라이선스: Windows Server 2016의 SQL Server 2017 Express**를 선택합니다.
-1. **가상 머신 만들기** 블레이드의 **기본 내용** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+  - [smalldisk] Windows Server 2019 数据中心服务器核心 - 自带许可
+  - Windows Server 2016 数据中心 - 自带许可 
+  - **自定义脚本扩展**
 
-    - 이름: **SqlHOST1**
-    - VM 디스크 유형: **프리미엄 SSD**
-    - 사용자 이름: **sqladmin**
-    - 암호: **Pa55w.rd**
-    - 구독: **기본 공급자 구독**
-    - 리소스 그룹: 새 리소스 그룹 **sql.resources-RG**의 이름.
-    - 위치: **로컬**
 
-1. **크기 선택** 블레이드에서 **DS1_v2**를 선택하고 **선택**을 클릭합니다.
-1. **가상 머신 만들기** 블레이드의 **설정** 창에서 **네트워크 보안 그룹** 설정을 **고급**으로 지정하고 **네트워크 보안 그룹(방화벽)** 을 클릭합니다.
-1. **네트워크 보안 그룹 만들기** 블레이드에서 **+ 인바운드 규칙 추가**를 클릭합니다.
-1. **인바운드 보안 규칙 추가** 블레이드에서 다음 설정을 지정하고 **추가**를 클릭합니다(나머지는 기본값을 그대로 유지).
+#### <a name="task-1-provision-a-sql-server-hosting-server"></a>任务 1：预配 SQL Server 托管服务器
 
-    - 대상 포트 범위: **1433**
-    - 프로토콜: **TCP**
-    - 작업: **허용**
-    - 우선 순위: **200**
-    - 이름: **custom-allow-sql**
+在此任务中，你将：
 
-1. **네트워크 보안 그룹 만들기** 블레이드로 돌아와서 **확인**을 클릭합니다.
-1. **가상 머신 만들기** 블레이드의 **설정** 창으로 돌아와서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+- 预配 SQL Server 托管服务器
 
-    - 부팅 진단: 사용 안 함
-    - 게스트 OS 진단: 사용 안 함
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
 
-1. **가상 머신 만들기** 블레이드의 **SQL Server 설정** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다(나머지는 기본값을 그대로 유지).
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-    - SQL 연결: **공용(인터넷)**
-    - 포트: **1433**
-    - SQL 인증: **사용**
-    - 로그인 이름: **SQLAdmin**
-    - 암호: **Pa55w.rd**
-    - 스토리지 구성: **일반**
-    - 자동화된 패치: **사용 안 함**
-    - 자동화된 백업: **사용 안 함**
-    - Azure Key Vault 통합: **사용 안 함**
+1. 在与 AzS-HOST1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在 Azure Stack Hub 管理员门户的中心菜单中，单击“创建资源”。
+1. 在“新建”边栏选项卡，选择“计算”，然后在可用资源类型列表中，选择“{WS-BYOL} 免费 SQL Server 许可证:Windows Server 2016 上的 SQL Server 2017 Express”。
+1. 在“创建虚拟机”边栏选项卡的“基本信息”窗格上，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-1. **가상 머신 만들기** 블레이드의 **요약** 창에서 **확인**을 클릭합니다.
+    - 名称：SqlHOST1
+    - VM 磁盘类型：**高级·SSD**
+    - 用户名：sqladmin
+    - 密码：Pa55w.rd
+    - 订阅：默认提供商订阅
+    - 资源组：新资源组名称 sql.resources-RG
+    - 位置：本地
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 20분 정도 걸릴 수 있습니다.
+1. 在“选择大小”边栏选项卡上选择“DS1_v2”，然后单击“选择”  。
+1. 在“创建虚拟机”边栏选项卡的“设置”窗格上，将“网络安全组”设置设为“高级”，然后单击“网络安全组(防火墙)”    。
+1. 在“创建网络安全组”边栏选项卡中，单击“+ 添加入站规则”。
+1. 在“添加入站安全规则”边栏选项卡中，指定以下设置并单击“添加”（将其他设置保留为默认值）：
 
-1. 배포가 완료되면 **SqlHOST1** 가상 머신 블레이드로 이동하여 **개요** 섹션의 **DNS 이름** 레이블 바로 아래에 있는 **구성**을 클릭합니다.
-1. **SqlHOST1-ip \| 구성** 블레이드의 **DNS 이름 레이블(옵션)** 텍스트 상자에 **sqlhost1**을 입력하고 **저장**을 클릭합니다.
+    - 目标端口范围：1433
+    - 协议：**TCP**
+    - 操作：**允许**
+    - 优先级：**200**
+    - 名称：custom-allow-sql
 
-    >**참고**: 이렇게 하면 **sqlhost1.local.cloudapp.azurestack.external** DNS 이름을 통해 **sqlhost1**을 사용할 수 있게 됩니다.
+1. 回到“创建网络安全组”边栏选项卡，单击“确定”。
+1. 回到“创建虚拟机”边栏选项卡的“设置”窗格，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-1. **sqlhost1-ip \| 구성** 블레이드에서 **할당** 옵션을 **정적**으로 설정하고 **저장**을 클릭합니다.
+    - 启动诊断：Disabled
+    - 来宾 OS 诊断：Disabled
 
-    >**참고**: 이렇게 하면 **sqlhost1** 가상 머신 다시 시작이 트리거됩니다. 다시 시작이 완료될 때까지 기다렸다가 다음 단계를 진행합니다.
+1. 在“创建虚拟机”边栏选项卡的“SQL Server 设置”窗格上，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내에서 **sqlhost1.local.cloudapp.azurestack.external**로 연결하는 원격 데스크톱 세션을 시작하고 메시지가 표시되면 다음 자격 증명을 사용하여 로그인합니다.
+    - SQL 连接：公共(互联网)
+    - 端口：1433
+    - SQL 身份验证：启用
+    - 登录名：SQLAdmin
+    - 密码：Pa55w.rd
+    - 存储配置：**常规**
+    - 自动修补：禁用
+    - 自动备份：禁用
+    - Azure 密钥保管库集成：禁用
 
-    - 사용자 이름: **SQLAdmin**
-    - 암호: **Pa55w.rd**
+1. 在“创建虚拟机”边栏选项卡的“摘要”窗格中，单击“确定”。
 
-1. **SqlHOST1**에 연결된 원격 데스크톱 세션 내에서 **시작**을 마우스 오른쪽 단추로 클릭하고 오른쪽 클릭 메뉴에서 **명령 프롬프트(관리자)** 를 선택합니다. 
-1. **SqlHOST1**에 연결된 원격 데스크톱 세션 내의 **관리자:  명령 프롬프트**에서 다음 명령을 실행하여 로컬 SQL Server 인스턴스로의 SQLCMD 세션을 시작합니다.
+    >**注意**：等待部署完成。 该操作需要约 20 分钟。
+
+1. 部署完成后，导航到“SqlHOST1”虚拟机边栏选项卡，在“概述”部分的“DNS 名称”标签下，单击“配置”   。
+1. 在“SqlHOST1-ip \| 配置”边栏选项卡的“DNS 名称标签(可选)”文本框中，键入“sqlhost1”并单击“保存”。   
+
+    >**注意**：这样可以通过 sqlhost1.local.cloudapp.azurestack.external DNS 名称提供 sqlhost1 。
+
+1. 在“sqlhost1-ip \| 配置”边栏选项卡上，将“分配”选项设置为“静态”，然后单击“保存”   。
+
+    >**注意**：这将触发 sqlhost1 虚拟机重启。 请等到重启完成，再继续下一步。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，启动与 sqlhost1.local.cloudapp.azurestack.external 的远程桌面会话，并在出现提示时使用以下凭据登录 ：
+
+    - 用户名：SQLAdmin
+    - 密码：Pa55w.rd
+
+1. 在与 SqlHOST1 的远程桌面会话中，右键单击“开始”，然后在右键菜单中选择“命令提示符(管理员)”  。 
+1. 在与 SqlHOST1 的远程桌面会话中，从“管理员: 命令提示符”中运行以下命令，以启动与本地 SQL Server 实例的 SQLCMD 会话：
 
     ```
     sqlcmd
     ```
 
-1. **SqlHOST1**에 연결된 원격 데스크톱 세션 내의 **관리자: 명령 프롬프트**에서 다음 명령을 실행하여 SQL Server용으로 포함된 데이터베이스 인증을 사용하도록 설정합니다.
+1. 在与 SqlHOST1 的远程桌面会话中，从“管理员: 命令提示符”中运行以下命令，以启用 SQL Server 的已包含数据库身份验证：
 
     ```
     sp_configure 'contained database authentication', 1;
@@ -154,39 +159,39 @@ lab:
     GO
     ```
 
-    > **참고:** 이 랩의 뒷부분에서 App Service 리소스 공급자를 구현할 때 이 호스팅 서버를 사용하려면 이 단계를 수행해야 합니다.
+    > **注意：** 在本实验室后面部分实现应用服务资源提供程序时，要使用此托管服务器，必须进行此操作。
 
-    > **참고:** **sqlhost1.local.cloudapp.azurestack.external**로 연결하는 원격 데스크톱 세션은 열어 둡니다. 이 랩 뒷부분에서 해당 세션을 사용할 것입니다.
+    > **注意：** 将与 sqlhost1.local.cloudapp.azurestack.external 的远程桌面会话保持打开。 你将在本实验室后面部分用到它。
 
 
-#### 작업 2: 파일 서버 프로비전
+#### <a name="task-2-provision-a-file-server"></a>任务 2：预配文件服务器
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 파일 서버 프로비전
+- 预配文件服务器
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션으로 전환하여 Azure Stack 관리자 포털의 허브 메뉴에서 **모든 서비스**를 클릭합니다.
-1. 서비스 목록에서 **Marketplace 관리**를 클릭합니다.
-1. **Marketplace 관리 - Marketplace 항목** 블레이드에서 **[smalldisk] Windows Server 2019 Datacenter Server Core-Bring your own license** 항목을 검색하여 해당 항목이 사용 가능한지 확인합니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 브라우저 창에서 새 탭을 열고 (https://aka.ms/appsvconmasdkfstemplate)으로 이동합니다.
-1. **AzureStack-QuickStart-Templates / appservice-fileserver-standalone** 페이지에서 **azuredeploy.json**을 클릭한 다음 **Raw**를 클릭합니다.
-1. 페이지의 전체 내용을 선택하여 클립보드에 복사합니다.
-1. Azure Stack 관리자 포털로 다시 전환하여 **+ 리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **사용자 지정**을 클릭한 다음 **템플릿 배포**를 클릭합니다.
-1. **사용자 지정 배포** 블레이드에서 **편집기에서 사용자 고유의 템플릿을 빌드합니다.** 를 선택합니다. 
-1. **템플릿 편집** 블레이드에서 미리 작성된 템플릿을 클립보드의 내용으로 바꿉니다.
-1. **사용자 지정 배포** 블레이드에서 **템플릿 편집**을 클릭합니다.
-1. **템플릿 편집** 블레이드의 **매개 변수** 섹션에서 다음 값을 설정합니다.
+1. 切换到与 AzSHOST-1 的远程桌面会话，在 Azure Stack 管理员门户的中心菜单中，单击“所有服务” 。
+1. 在服务列表中，单击“市场管理”
+1. 在“市场管理 - 市场项”边栏选项卡上，搜索“[smalldisk] Windows Server 2019 数据中心服务器核心 - 自带许可”项，并确保其可用 。
+1. 在与 AzSHOST-1 的远程桌面会话中，在浏览器窗口中打开一个新选项卡并导航到 (https://aka.ms/appsvconmasdkfstemplate) 。
+1. 在“AzureStack-QuickStart-Templates / appservice-fileserver-standalone”页上，单击“azuredeploy.json”，然后单击“原始”  。
+1. 选择该页的全部内容并将其复制到剪贴板。
+1. 切换回 Azure Stack 管理员门户，并单击“+ 创建资源”。
+1. 在“新建”边栏选项卡上，单击“自定义”，然后单击“模板部署”  。
+1. 在“自定义部署”边栏选项卡上，选择“在编辑器中生成自己的模板”。 
+1. 在“编辑模板”边栏选项卡上，将预先创建的模板替换为剪贴板的内容。
+1. 在“自定义部署”边栏选项卡上，单击“编辑模板” 。
+1. 在“编辑模板”边栏选项卡的“参数”部分，设置以下值 ：
 
-    - **imageReference**의 **defaultValue**: **MicrosoftWindowsServer**로 설정 **| WindowsServer | 2019-Datacenter-Core-smalldisk | latest**
-    - **imageReference**의 **allowedValue**: **MicrosoftWindowsServer**로 설정 **| WindowsServer | 2019-Datacenter-Core-smalldisk | latest**
-    - **fileServerVirtualMachineSize**의 **defaultValue**: **Standard_A1_v2**로 설정
-    - **fileServerVirtualMachineSize**의 **allowedValues**: **Standard_A1_v2**로 설정
-    - **adminPassword**의 **defaultValue**: **Pa55w.rd1234**로 설정
-    - **fileShareOwnerPassword**의 **defaultValue**: **Pa55w.rd1234**로 설정
-    - **fileShareUserPassword**의 **defaultValue**: **Pa55w.rd1234**로 설정
+    - imageReference 的 defaultValue：设置为 MicrosoftWindowsServer | WindowsServer | 2019-Datacenter-Core-smalldisk | latest
+    - imageReference 的 allowedValues：设置为 MicrosoftWindowsServer | WindowsServer | 2019-Datacenter-Core-smalldisk | latest
+    - fileServerVirtualMachineSize 的 defaultValue：设置为 Standard_A1_v2  
+    - fileServerVirtualMachineSize 的 allowedValues：设置为 Standard_A1_v2  
+    - adminPassword 的 defaultValue：设置为 Pa55w.rd1234  
+    - fileShareOwnerPassword 的 defaultValue：设置为 Pa55w.rd1234  
+    - fileShareUserPassword 的 defaultValue：设置为 Pa55w.rd1234  
 
-    > **참고:** 그러면 **Parameters** 섹션의 콘텐츠가 다음과 같이 설정됩니다.
+    > **注意：** 这将导致“参数”部分包含以下内容：
 
     ```json
       "parameters": {
@@ -270,27 +275,27 @@ lab:
       },
     ```
 
-1. **템플릿 편집** 블레이드의 **변수** 섹션에서 **"sku": "2016-Datacenter",** 를 **"sku": "2019-Datacenter-Core-smalldisk",** 로 바꾸고 **저장**을 선택합니다.
-1. **사용자 지정 배포** 블레이드로 돌아와서 **구독** 드롭다운 목록에서 **기본 공급자 구독**을 선택하고 **리소스 그룹** 섹션에서 **sql.resources-RG**를 선택합니다.
-1. **사용자 지정 배포** 블레이드에서 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
+1. 在“编辑模板”边栏选项卡的“变量”部分中，将“"sku":  **"2016-Datacenter"** **”替换为“"sku":"2019-Datacenter-Core-smalldisk"”，并选择“保存”。** 
+1. 回到“自定义部署”边栏选项卡，在“订阅”下拉列表中，选择“默认提供商订阅”，然后在“资源组”部分中选择“sql.resources-RG”    。
+1. 在“自定义部署”边栏选项卡上，单击“查看 + 创建”，然后单击“创建”  。
 
-    > **참고:** 배포가 완료될 때까지 기다립니다. 15분 정도 걸립니다.
+    > **注意：** 等待部署完成。 该操作需要约 15 分钟。
 
 
-#### 작업 3: App Service 리소스 공급자 설치
+#### <a name="task-3-install-the-app-service-resource-provider"></a>任务 3：安装应用服务资源提供程序
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- App Service 리소스 공급자 설치
+- 安装应用服务资源提供程序
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털 허브 메뉴에서 **모든 서비스**를 클릭합니다.
-1. 서비스 목록에서 **Marketplace 관리**를 클릭합니다.
-1. **Marketplace 관리 - Marketplace 항목** 블레이드에서 **Windows Server 2016 Datacenter-Bring your own license** 항목을 검색하여 해당 항목이 사용 가능한지 확인합니다.
-1. **Marketplace 관리 - Marketplace 항목** 블레이드에서 **사용자 지정 스크립트 확장** 항목을 검색하여 해당 항목이 사용 가능한지 확인합니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저를 시작하고 (https://aka.ms/appsvconmasinstaller) 로 이동하여 **AppService.exe**를 다운로드합니다. 다운로드가 완료되면 **C:\\Downloads\\AppServiceRP** 폴더에 해당 파일을 복사합니다(필요하면 폴더를 만드세요).
-1. 웹 브라우저에서 (https://aka.ms/appsvconmashelpers) 로 이동하여 **AppServiceHelperScripts.zip**을 다운로드합니다. 다운로드가 완료되면 **C:\\Downloads\\AppServiceRP** 폴더에 파일의 압축을 풉니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내에서 관리자로 Windows PowerShell을 시작합니다.
-1. **관리자: Windows PowerShell** 창에서 다음 명령을 실행하여 Azure Stack에서 App Service에 필요한 인증서를 만듭니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，在 Azure Stack 管理员门户的中心菜单中，单击“所有服务” 。
+1. 在服务列表中，单击“市场管理”。
+1. 在“市场管理 - 市场项”边栏选项卡上，搜索“Windows Server 2016 数据中心 - 自带许可”项，并确保其可用 。
+1. 在“市场管理 - 市场项”边栏选项卡上，搜索“自定义脚本扩展”项，并确保其可用 。
+1. 在与 AzSHOST-1 的远程桌面会话中，启动 Web 浏览器并导航到 (https://aka.ms/appsvconmasinstaller) 以下载 AppService.exe，下载完成后，将该文件复制到 C:\\ Downloads\\ AppServiceRP 文件夹（根据需要创建该文件夹）。  
+1. 在 Web 浏览器中，导航到 (https://aka.ms/appsvconmashelpers) 以下载 AppServiceHelperScripts.zip，下载完成后，将其内容解压缩到 C:\\ Downloads\\ AppServiceRP 文件夹。 
+1. 在与 AzSHOST-1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在“管理员:Windows PowerShell”窗口中运行以下命令，以在 Azure Stack 上创建应用服务所需的证书：
 
     ```powershell
     Set-Location -Path C:\Downloads\AppServiceRP
@@ -299,26 +304,26 @@ lab:
     $pfxPass = ConvertTo-SecureString 'Pa55w.rd1234pfx' -AsPlainText -Force
 
     .\Create-AppServiceCerts.ps1 `
-	-pfxPassword $pfxPass `
-	-DomainName 'local.azurestack.external'
+    -pfxPassword $pfxPass `
+    -DomainName 'local.azurestack.external'
     ```
 
-1. **관리자: Windows PowerShell** 창에서 다음 명령을 실행하여 App Service 공급자를 설치하는 데 필요한 Azure Stack Hub용 Azure Resource Manager 루트 인증서를 만듭니다.
+1. 在“管理员:Windows PowerShell”窗口中运行以下命令，为安装应用服务提供程序所需的 Azure Stack Hub 创建 Azure 资源管理器根证书：
 
     ```
     $domain = 'azurestack.local'
     $privilegedEndpoint = 'AzS-ERCS01'
 
-    # 권한 있는 엔드포인트 액세스에 필요한 클라우드 관리자 자격 증명을 추가합니다.
+    # Add the cloudadmin credential that's required for privileged endpoint access.
     $cloudAdminPass = ConvertTo-SecureString 'Pa55w.rd1234' -AsPlainText -Force
     $cloudAdminCreds = New-Object System.Management.Automation.PSCredential ("CloudAdmin@$domain", $cloudAdminPass)
 
     .\Get-AzureStackRootCert.ps1 -PrivilegedEndpoint $privilegedEndpoint -CloudAdminCredential $cloudAdminCreds
     ```
 
-    > **참고:** 이 스크립트는 Azure Stack Hub용 Azure Resource Manager 루트 인증서가 들어 있는 AzureStackCertificationAuthority.cer 파일을 로컬 폴더에 만듭니다.
+    > **注意：** 该脚本在本地文件夹中创建一个名为 AzureStackCertificationAuthority.cer 的文件，其中包含 Azure Stack Hub 的 Azure 资源管理器根证书。
 
-1. **관리자: Windows PowerShell** 창에서 다음 명령을 실행하여 App Service 공급자를 설치하는 데 필요한 AD FS 앱을 만듭니다.
+1. 在“管理员:Windows PowerShell”窗口中运行以下命令，以创建安装应用服务提供程序所需的 AD FS 应用：
 
     ```
     $domain = 'azurestack.local'
@@ -335,163 +340,163 @@ lab:
        -CertificatePassword $certificatePassword
     ```
 
-1. 스크립트의 출력에서 생성된 AD FS 애플리케이션의 ID를 나타내는 GUID를 복사합니다. 
+1. 在脚本的输出中，复制表示生成的 AD FS 应用程序 ID 的 GUID。 
 
-    > **참고:** 이 GUID를 적어 두세요. 이 작업 뒷부분에서 해당 GUID가 필요합니다.
+    > **注意：** 请确保记录此 GUID。 你将在此任务的后面部分使用它。
 
-1. **관리자: Windows PowerShell** 창의 **관리자: Windows PowerShell** 창에서 다음 명령을 실행하여 AppService.exe를 시작합니다.
+1. 在“管理员:**Windows PowerShell”窗口以及从“管理员:** Windows PowerShell”窗口，运行以下命令以启动 AppService.exe：
 
     ```
     .\AppService.exe
     ```
 
-    > **참고:** 이렇게 하면 Microsoft Azure App Service 설치 마법사가 시작됩니다.
+    > **注意：** 这将启动 Microsoft Azure 应用服务安装向导。
 
-1. **App Service를 배포하거나 최신 버전으로 업그레이드합니다.** 를 클릭합니다.
-1. **Microsoft 소프트웨어 보조 사용 조건** 페이지에서 내용을 검토하고 **사용 조건을 읽고 이해했으며, 이에 동의합니다.** 체크박스를 클릭한 후에 **다음**을 클릭합니다.
-1. 타사 사용 조건이 표시되는 페이지에서 내용을 검토하고 **사용 조건을 읽고 이해했으며, 이에 동의합니다.** 체크박스를 클릭한 후에 **다음**을 클릭합니다.
-1. 관리자 및 테넌트 ARM 엔드포인트가 표시되는 페이지에서 정보가 정확한지 확인하고 **다음**을 클릭합니다.
-1. Azure Stack App Service 클라우드 정보 페이지에서 **자격 증명** 옵션이 선택되어 있는지 확인하고 **연결**을 클릭합니다.
-1. 메시지가 표시되면 암호 **Pa55w.rd1234**를 사용하여 **CloudAdmin@AzureStack.local**으로 로그인합니다.
-1. Azure Stack App Service 클라우드 정보 페이지로 돌아와서 **Azure Stack 구독** 드롭다운 목록에서 **기본 공급자 구독**을 선택하고 **Azure Stack 위치** 드롭다운 목록에서는 **로컬**을 선택한 후 **다음**을 클릭합니다.
-1. **가상 네트워크 구성**에서 기본 설정을 수락하고 **다음**을 클릭합니다.
-1. 다음 페이지에서 아래 정보를 지정하고 **다음**을 클릭합니다.
+1. 单击“部署应用服务或升级到最新版本”。
+1. 在“MICROSOFT 软件补充许可条款”页上，查看内容，单击“我已阅读、理解并同意这些许可条款”复选框，然后单击“下一步”  。
+1. 在显示第三方许可条款的页面上，查看内容，单击“我已阅读、理解并同意这些许可条款”复选框，然后单击“下一步” 。
+1. 在显示管理员终结点和租户 ARM 终结点的页面上，验证信息是否正确，然后单击“下一步”。
+1. 在“Azure Stack 应用服务云信息”页上，确保选择了“凭证”选项，然后单击“连接” 。
+1. 出现提示时，请使用 CloudAdmin@AzureStack.local 和密码 Pa55w.rd1234 登录 。
+1. 回到“Azure Stack 应用服务云信息”页，在“Azure Stack 订阅”下拉列表中，选择“默认提供商订阅”，在“Azure Stack 位置”下拉列表中，选择“本地”，然后单击“下一步”    。
+1. 在“虚拟网络配置”中，接受默认设置并单击“下一步” 。
+1. 在下一页上，指定以下信息并单击“下一步”：
 
-    - 파일 공유 UNC 경로: **\\appservicefileshare.local.cloudapp.azurestack.external\websites**
-    - 파일 공유 소유자: **fileshareowner**
-    - 파일 공유 소유자 암호: **Pa55w.rd1234**
-    - 파일 공유 사용자: **fileshareuser**
-    - 파일 공유 사용자 암호: **Pa55w.rd1234**
+    - 文件共享 UNC 路径：\\appservicefileshare.local.cloudapp.azurestack.external\websites
+    - 文件共享所有者：fileshareowner
+    - 文件共享所有者密码：Pa55w.rd1234
+    - 文件共享用户：fileshareuser
+    - 文件共享用户密码：Pa55w.rd1234
 
-1. 다음 페이지에서 이 작업 앞부분에서 생성한 애플리케이션 ID를 식별하는 설정을 지정하고 **다음**을 클릭합니다.
+1. 在下一页上，指定标识你在此任务的前面部分生成的应用程序 ID 的设置，然后单击“下一步”：
 
-    - ID 애플리케이션 ID: 이 작업의 앞부분에서 복사한 GUID
-    - ID 애플리케이션 인증서 파일(*.pfx): **C:\Downloads\AppServiceRP\sso.appservice.local.azurestack.external.pfx**
-    - ID 애플리케이션 인증서 파일(*.pfx) 암호: **Pa55w.rd1234pfx**
-    - ARM(Azure Resource Manager) 루트 인증서 파일(*.cer): **C:\Downloads\AppServiceRP\AzureStackCertificationAuthority.cer**
+    - 标识应用程序 ID：你在此任务的前面部分复制的 GUID
+    - 标识应用程序证书文件 (*.pfx)：C:\Downloads\AppServiceRP\sso.appservice.local.azurestack.external.pfx
+    - 标识应用程序证书文件 (*.pfx) 密码：Pa55w.rd1234pfx
+    - Azure 资源管理器 (ARM) 根证书文件 (*.cer)：C:\Downloads\AppServiceRP\AzureStackCertificationAuthority.cer
 
-1. 다음 페이지에서 인증서 파일과 각 파일의 암호를 식별하는 설정을 지정합니다.
+1. 在下一页上，指定标识证书文件及其相应密码的设置：
 
-    - App Service 기본 SSL 인증서 파일(*.pfx): **C:\Downloads\AppServiceRP\_.appservice.local.azurestack.external.pfx**
-    - App Service 기본 SSL 인증서(*.pfx) 암호: **Pa55w.rd1234pfx**
-    - App Service API SSL 인증서 파일(*.pfx): **C:\Downloads\AppServiceRP\api.appservice.local.azurestack.external.pfx**
-    - App Service API SSL 인증서(*.pfx) 암호: **Pa55w.rd1234pfx**
-    - App Service 게시자 인증서 파일(*.pfx): **C:\Downloads\AppServiceRP\ftp.appservice.local.azurestack.external.pfx**
-    - App Service 게시자 SSL 인증서(*.pfx) 암호: **Pa55w.rd1234pfx**
+    - 应用服务默认 SSL 证书文件 (*.pfx)：C:\Downloads\AppServiceRP\_.appservice.local.azurestack.external.pfx
+    - 应用服务默认 SSL 证书 (*.pfx) 密码：Pa55w.rd1234pfx
+    - 应用服务 API SSL 证书文件 (*.pfx)：C:\Downloads\AppServiceRP\api.appservice.local.azurestack.external.pfx
+    - 应用服务 API SSL 证书 (*.pfx) 密码：Pa55w.rd1234pfx
+    - 应用服务发布服务器证书文件 (*.pfx)：C:\Downloads\AppServiceRP\ftp.appservice.local.azurestack.external.pfx
+    - 应用服务发布服务器 SSL 证书 (*.pfx) 密码：Pa55w.rd1234pfx
 
-1. 다음 페이지에서 SQL Server 설정을 지정합니다.
+1. 在下一页上，指定 SQL Server 设置：
 
-    - SQL Server 이름: **sqlhost1.local.cloudapp.azurestack.external**
-    - SQL sysadmin 로그인: **SQLAdmin**
-    - SQL sysadmin 암호: **Pa55w.rd1234**
+    - SQL Server 名称：sqlhost1.local.cloudapp.azurestack.external
+    - SQL sysadmin 登录名：SQLAdmin
+    - SQL sysadmin 密码：Pa55w.rd1234
 
-1. 다음 페이지에서 App Service 배포의 인스턴스 수와 SKU를 지정합니다.
+1. 在下一页上，指定应用服务部署实例的数目和 SKU：
 
-    - 컨트롤러 역할: **2개 인스턴스 - Standard_A1_v2 - [1개 코어, 2048MB]**
-    - 관리 역할: **1개 인스턴스 - Standard_A2_v2 - [2개 코어, 4096MB]**
-    - 게시자 역할: **1개 인스턴스 - Standard_A1_v2 - [1개 코어, 2048MB]**
-    - 프런트 엔드 역할: **1개 인스턴스 - Standard_A1_v2 - [1개 코어, 2048MB]**
-    - 공유 작업자 역할: **1개 인스턴스 - Standard_A1_v2 - [1개 코어, 2048MB]**
+    - 控制器角色：2 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
+    - 管理角色：1 个实例 - Standard_A2_v2 - [2 个核心，4096 MB]
+    - 发布服务器角色：1 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
+    - 前端角色：1 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
+    - 共享辅助角色：1 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
 
-1. **다음**을 클릭합니다.
-1. 다음 페이지의 **플랫폼 이미지 선택** 드롭다운 목록에서 **2016 Datacenter - latest** 이미지를 선택하고 **다음**을 클릭합니다.
-1. 다음 페이지에서 배포용으로 아래 관리자 자격 증명을 지정합니다.
+1. 单击“下一步”。
+1. 在下一页上的“选择平台映像”下拉列表中，选择“2016 Datacenter - latest”映像，然后单击“下一步”  。
+1. 在下一页上，为部署指定以下管理员凭据：
 
-    - 작업자 역할 가상 머신 관리자: **SAWorkerAdmin**
-    - 작업자 역할 가상 머신 암호: **Pa55w.rd1234**
-    - 암호 확인: **Pa55w.rd1234**
-    - 기타 역할 가상 머신 관리자: **SAORoleAdmin**
-    - 기타 역할 가상 머신 암호: **Pa55w.rd1234**
-    - 암호 확인: **Pa55w.rd1234**
+    - 辅助角色虚拟机管理员：SAWorkerAdmin
+    - 辅助角色虚拟机密码：Pa55w.rd1234
+    - 确认密码：Pa55w.rd1234
+    - 其他角色虚拟机管理员：SAORoleAdmin
+    - 其他角色虚拟机密码：Pa55w.rd1234
+    - 确认密码：Pa55w.rd1234
 
-1. **다음**을 클릭합니다.
-1. 요약 페이지에서 **배포를 시작하려면 선택하고 [다음]을 클릭하세요.** 체크박스를 클릭하고 배포를 시작하려면 **다음**을 클릭합니다.
+1. 单击“下一步”。
+1. 在“摘要”页上，单击“选择并单击‘下一步’以开始部署”复选框，然后单击“下一步”开始部署 。
 
-    > **참고:** 설치가 완료될 때까지 기다립니다. 2~3시간 정도 걸릴 수 있습니다.
+    > **注意：** 请等待安装完成。 此过程可能需要 2-3 小时。
 
-1. 설치가 완료되면 **끝내기**를 클릭합니다.
-
-
-#### 작업 4: App Service 리소스 공급자 설치 유효성 검사
-
-이 작업에서는 다음을 수행합니다.
-
-- App Service 리소스 공급자 설치 유효성 검사
-
-1. **AzSHOST-1**에 연결된 원격 데스크톱 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저 내 허브 메뉴에서 **모든 서비스**를 선택합니다. 그런 다음 **모든 서비스** 블레이드에서 **관리**를 선택하고 서비스 목록에서 **App Service**를 클릭합니다. 
-
-    > **참고:** 브라우저 페이지를 새로 고쳐야 **App Service** 항목이 사용 가능한 상태가 될 수도 있습니다.
-
-1. **App Service** 블레이드의 **필수** 섹션에서 **상태** 레이블 아래에 **모든 역할이 준비됨** 메시지가 표시되는지 확인합니다.
-
-    > **참고:** 모든 역할이 정상적으로 시작될 때까지 기다리세요. 이 경우 15~20분이 더 걸릴 수 있습니다.
-
->**검토**: 이 연습에서는 Azure Stack Hub에서 App Service 리소스 공급자를 설치했습니다.
+1. 安装完成后，单击“退出”。
 
 
-### 연습 2: Azure Stack Hub에서 App Service 리소스 공급자의 관리 작업 살펴보기
+#### <a name="task-4-validate-the-installation-of-the-app-service-resource-provider"></a>任务 4：验证应用服务资源提供程序的安装
 
-이 연습에서는 Azure Stack Hub에서 App Service 리소스 공급자의 관리 작업을 살펴봅니다.
+在此任务中，你将：
 
-1. App Service 리소스의 확장 기능 살펴보기
-1. App Service 리소스 공급자의 백업 설정 살펴보기
+- 验证应用服务资源提供程序的安装
 
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器的中心菜单中，选择“所有服务”，在“所有服务”边栏选项卡上，选择“管理”，然后在服务列表中，单击“应用服务”    。 
 
-### 작업 1: App Service 리소스의 확장 기능 살펴보기
+    > **注意：** “应用服务”条目可能需要在刷新浏览器页面后才能变得可用。
 
-이 작업에서는 다음을 수행합니다.
+1. 在“应用服务”边栏选项卡的“Essentials”部分中，验证“所有角色已就绪”消息是否显示在“状态”标签的下方   。
 
-- App Service 리소스의 확장 기능 검토
-- App Service 리소스 공급자의 백업 설정 검토
+    > **注意：** 等待成功启动所有角色。 该操作可能需要额外的 15-20 分钟。
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저 내 **App Service** 블레이드에서 **역할**을 클릭합니다.
-1. **App Service | 역할** 블레이드에서 역할 및 해당 인스턴스의 목록을 검토합니다.
-1. **App Service | 역할** 블레이드의 **컨트롤러** 행에서 오른쪽 줄임표 기호를 클릭하고 드롭다운 목록에서 **가상 머신** 항목을 확인합니다.
-
-    > **참고:** 컨트롤러 역할은 가상 머신을 사용하여 구현됩니다. 따라서 App Service 리소스 공급자를 설치할 때 컨트롤러 인스턴스 2개를 선택한 것입니다.
-
-1. **App Service | 역할** 블레이드의 나머지 행에서 오른쪽 줄임표 기호를 클릭하고 드롭다운 목록에서 **ScaleSet** 항목을 확인합니다.
-
-    > **참고:** 기타 모든 역할은 확장 집합을 사용하여 구현되므로 확장이 가능합니다.
-
-1. **App Service | 역할** 블레이드에서 현재 **공유** 작업자 계층에는 웹 작업자 역할만 표시되어 있음을 확인합니다. 
-1. **App Service | 역할** 블레이드 왼쪽의 세로 메뉴에서 **작업자 계층**을 선택합니다.
-1. **App Service | 작업자 계층** 블레이드에서 **+ 추가**를 클릭합니다. 
-1. **만들기** 블레이드에서 사용 가능한 옵션을 검토합니다. 사용 가능한 옵션으로는 **공유**와 **전용** 중 하나를 선택할 수 있는 **컴퓨팅 모드** 드롭다운 목록 등이 있습니다.
-
-    > **참고:** 사용자 지정 소프트웨어가 포함된 다양한 크기의 가상 머신을 선택한 작업자 계층에서 가상 머신으로 배포할 수 있습니다.
-
-1. 아무 항목도 변경하지 않고 **만들기** 블레이드를 닫습니다.
-
-    > **참고:** 프로비전 프로세스는 1시간 넘게 걸릴 수도 있습니다.
+>回顾：在本练习中，你在 Azure Stack Hub 上安装了应用服务资源提供程序。
 
 
-### 작업 2: App Service 리소스 공급자의 백업 설정 살펴보기
+### <a name="exercise-2-explore-management-tasks-of-app-service-resource-provider-on-azure-stack-hub"></a>练习 2：探索 Azure Stack Hub 上应用服务资源提供程序的管理任务
 
-이 작업에서는 다음을 수행합니다.
+在本练习中，你将探索 Azure Stack Hub 上应用服务资源提供程序的管理任务。
 
-- App Service 리소스 공급자의 백업 설정 검토
+1. 探索应用服务资源的缩放功能
+1. 探索应用服务资源提供程序的备份设置
 
-> **참고:** Azure Stack Hub의 App Service 백업에는 다음과 같은 기본 구성 요소가 포함됩니다.
 
-- 리소스 공급자 인프라
-- 리소스 공급자 비밀 
-- 계량 데이터베이스를 호스트하는 SQL Server 인스턴스
-- App Service 파일 공유에 저장된 사용자 워크로드 콘텐츠
+### <a name="task-1-explore-the-scaling-functionality-of-app-service-resources"></a>任务 1：探索应用服务资源的缩放功能
 
-    > **참고:** App Service 복구 PowerShell cmdlet을 사용하면 복구 중에 백업에서 리소스 공급자 인프라 구성을 다시 만들 수 있습니다. 복구 프로세스 관련 세부 정보는 [Azure Stack Hub에서 App Service 복구](https://docs.microsoft.com/ko-kr/azure-stack/operator/app-service-recover?view=azs-2008)를 참조하세요.
+在此任务中，你将：
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저 내 **App Service** 블레이드에서 **비밀**을 클릭합니다.
-1. **App Service \| 비밀** 블레이드에서 **비밀 다운로드**를 클릭한 다음 **저장**을 클릭합니다.
-1. **AzSHOST-1**의 **Downloads** 폴더에 **SystemSecrets.json** 파일이 다운로드되었는지 확인합니다.
+- 查看应用服务资源的缩放功能
+- 查看应用服务资源提供程序的备份设置
 
-    > **참고:** **SystemSecrets.json** 파일을 안전한 위치에 복사하고 비밀을 교체할 때마다 이 프로세스를 반복해야 합니다. 
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器中的“应用服务”边栏选项卡上，单击“角色”  。
+1. 在“应用服务 | 角色”边栏选项卡上，查看角色列表和相应实例。
+1. 在“应用服务 | 角色”边栏选项卡的“控制器”行中，单击右侧的省略号，然后在下拉列表中，留意“虚拟机”条目。  
 
-    > **참고:** **Appservice_hosting** 및 **Appservice_metering** 데이터베이스를 백업할 때는 Azure Backup Server의 SQL Server 유지 관리 계획을 사용하는 것이 좋습니다. 그러나 SQL Server PowerShell 모듈 cmdlet을 사용하여 이러한 데이터베이스를 백업할 수도 있습니다.
+    > **注意：** 控制器角色通过使用虚拟机实现，因此在安装应用服务资源提供程序期间会选择控制器的 2 个实例。
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션 내에서 **sqlhost1.local.cloudapp.azurestack.external**로 연결하는 원격 데스크톱 세션으로 전환합니다. 
-1. **SqlHOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 Windows PowerShell을 시작합니다.
-1. **SqlHOST1**에 연결된 원격 데스크톱 세션 내의 **관리자: Windows PowerShell** 창에서 다음 명령을 실행하여 App Service 데이터베이스의 로컬 백업을 수행합니다.
+1. 在“应用服务 | 角色”边栏选项卡的其余行中，单击右侧的省略号，然后在下拉列表中，留意“ScaleSet”条目。 
+
+    > **注意：** 所有其他角色均通过使用规模集实现，以实现缩放。
+
+1. 在“应用服务 | 角色”边栏选项卡上，留意当前仅具有“共享”辅助角色层级中的 Web 辅助角色。  
+1. 在“应用服务 | 角色”边栏选项卡上，在左侧的垂直菜单中，选择“辅助角色层级”。 
+1. 在“应用服务 | 辅助角色层”边栏选项卡上，单击“+ 添加”。 
+1. 在“创建”边栏选项卡上，查看可用选项，包括允许在“共享”和“专用”之间进行选择的“计算模式”下拉列表   。
+
+    > **注意：** 可以使用自定义软件将各种大小的虚拟机部署为所选辅助角色层级中的虚拟机。
+
+1. 关闭“创建”边栏选项卡，而不进行任何更改。
+
+    > **注意：** 预配过程可能需要一个多小时。
+
+
+### <a name="task-2-explore-the-backup-settings-of-the-app-service-resource-provider"></a>任务 2：探索应用服务资源提供程序的备份设置
+
+在此任务中，你将：
+
+- 查看应用服务资源提供程序的备份设置。
+
+> **注意：** Azure Stack Hub 上的应用服务备份包含以下主要组件
+
+- 资源提供程序基础结构
+- 资源提供程序机密 
+- 托管计量数据库的 SQL Server 实例
+- 存储在应用服务文件共享中的用户工作负载内容
+
+    > **注意：** 可以在恢复期间使用应用服务恢复 PowerShell cmdlet 基于备份重新创建资源提供程序基础结构配置。 有关恢复过程的详细信息，请参阅 [Azure Stack Hub 上的应用服务恢复](https://docs.microsoft.com/en-us/azure-stack/operator/app-service-recover?view=azs-2008)。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器的“应用服务”边栏选项卡上，单击“机密”  。
+1. 在“应用服务 \| 机密”边栏选项卡上，单击“下载机密”，然后单击“保存”。 **\|**  
+1. 验证 SystemSecrets.json 文件是否已下载到 AzSHOST-1 上的 Downloads 文件夹  。
+
+    > **注意：** 应将 SystemSecrets.json 文件复制到一个安全位置，并在每次轮换机密时重复此过程。 
+
+    > **注意：** 虽然备份 Appservice_hosting 和 Appservice_metering 数据库的建议方法包含使用 Azure 备份服务器的 SQL Server 维护计划，但你也可以使用 SQL Server PowerShell 模块 cmdlet 进行备份 。
+
+1. 在与 AzSHOST-1 的远程桌面会话中，切换到与 sqlhost1.local.cloudapp.azurestack.external 的远程桌面会话 。 
+1. 在与 SqlHOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在与 SqlHOST1 的远程桌面会话中，从“管理员: Windows PowerShell”提示符中运行以下命令，以执行应用服务数据库的本地备份：
 
     ```powershell
     $date = Get-Date -Format 'yyyyMMdd'
@@ -500,11 +505,11 @@ lab:
     Backup-SqlDatabase -ServerInstance 'localhost' -Database 'appservice_metering' -BackupFile "C:\Backups\appservice_metering_$date.bak" -CopyOnly
     ```
 
-    > **참고:** App Service는 지정된 파일 공유에 테넌트 앱 정보를 저장합니다. 파일 공유를 백업할 때는 Azure Backup Server를 사용하는 것이 좋습니다. 그러나 어떤 파일 복사 유틸리티든 이러한 용도로 사용할 수 있습니다.
+    > **注意：** 应用服务在其指定文件共享上存储租户应用信息。 虽然备份文件共享的建议方法包含使用 Azure 备份服务器，但你也可以使用任何文件复制实用工具来进行备份。
 
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션으로 전환합니다. 그런 다음 **AzSHOST-1**에 연결된 원격 데스크톱 세션 내의 Azure Stack 관리자 포털이 표시된 웹 브라우저 내 **App Service** 블레이드에서 **시스템 구성**을 클릭합니다.
-1. Azure Stack 관리자 포털이 표시된 웹 브라우저 내 **App Service \| 시스템 구성** 블레이드에서 **파일 공유**의 전체 경로(**\\\\appservicefileshare.local.cloudapp.azurestack.external\\websites**)를 확인합니다.
-1. **AzSHOST-1**에 연결된 원격 데스크톱 세션으로 전환한 다음 **관리자:  Windows PowerShell** 창에서 다음 명령을 실행하여 App Service 파일 공유의 콘텐츠를 로컬 파일 시스템에 복사합니다.
+1. 切换到与 AzSHOST-1 的远程桌面会话，在与 AzSHOST-1 的远程桌面会话中，在显示 Azure Stack 管理员门户的 Web 浏览器的“应用服务”边栏选项卡上，单击“系统配置”   。
+1. 在显示 Azure Stack 管理员门户的 Web 浏览器中，在“应用服务 \| 系统配置”边栏选项卡上，留意文件共享的完整路径 (\\\\appservicefileshare.local.cloudapp.azurestack.external\\websites)
+1. 切换到与 AzSHOST-1 的远程桌面会话，并从“管理员: Windows PowerShell”窗口中运行以下命令，将应用服务文件共享的内容复制到本地文件系统：
 
     ```powershell
     $source = '\\appservicefileshare.local.cloudapp.azurestack.external\websites'
@@ -520,117 +525,117 @@ lab:
     Remove-PSDrive -Name 'S'
     ```
 
->**검토**: 이 연습에서는 Azure Stack Hub에서 App Service 리소스 공급자의 관리 작업을 살펴보았습니다.
+>回顾：在本练习中，你探索了 Azure Stack Hub 上应用服务资源提供程序的管理任务。
 
 
-### 연습 3: Azure Stack Hub에서 App Service 리소스 제공
+### <a name="exercise-3-deliver-app-service-resources-in-azure-stack-hub"></a>练习 3：在 Azure Stack Hub 中交付应用服务资源
 
-이 연습에서는 Azure Stack Hub 사용자에게 App Service 리소스를 제공합니다.
+在本练习中，你将向 Azure Stack Hub 用户交付应用服务资源。
 
-1. 사용자에게 App Service 리소스 제공(클라우드 운영자 역할)
-1. 웹앱 만들기(사용자 역할)
-
-
-### 작업 1: 사용자에게 App Service 리소스 제공(클라우드 운영자 역할)
-
-이 작업에서는 다음을 수행합니다.
-
-- 사용자에게 App Service 리소스 제공(클라우드 운영자 역할)
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 브라우저 창으로 전환합니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **+ 리소스 만들기**를 클릭합니다.
-1. **새로 만들기** 블레이드에서 **제안+요금제**를 클릭한 다음 **요금제**를 클릭합니다.
-1. **새 요금제** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
-
-    - 표시 이름: **app-service-plan1**
-    - 리소스 이름: **app-service-plan1**
-    - 리소스 그룹: 새 리소스 그룹 **app-service-plans-RG**의 이름.
-
-1. **다음: 서비스 >** 를 클릭합니다.
-1. **새 요금제** 블레이드의 **서비스** 탭에서 **Microsoft.Web** 체크박스를 선택합니다.
-1. **다음: 할당량>** 을 클릭합니다.
-1. **새 요금제** 블레이드의 **할당량** 탭에서 **새로 만들기**를 선택하고 **만들기** 블레이드에서 다음 설정을 지정한 후에 **확인**을 클릭합니다.
-
-    - 이름: **app-service-quota1**
-    - App Service 요금제: **사용자 지정** **20**
-    - 공유 App Service 요금제: **사용자 지정** **10**
-    - 전용 App Service 요금제: **사용자 지정** **10**
-    - 가격 책정 SKU: **사용자 지정** **2개 선택됨**(**무료** 및 **공유**)
-    - 사용량 요금제: **사용**
-
-    >**참고**: 사용량 요금제 모델에서 Azure Functions를 제공하려면 공유 웹 작업자를 배포해야 합니다.
-
-1. **새 요금제** 블레이드의 **할당량** 탭으로 돌아와서 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
-
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **새로 만들기** 블레이드로 돌아와서 **제안**을 클릭합니다.
-1. **새 제안 만들기** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
-
-    - 표시 이름: **app-service-offer1**
-    - 리소스 이름: **app-service-offer1**
-    - 리소스 그룹: **app-service-offers-RG**
-    - 이 제안을 공개로 설정: **예**
-
-1. **다음: 기본 요금제 >** 를 클릭합니다. 
-1. **새 제안 만들기** 블레이드의 **기본 요금제** 탭에서 **app-service-plan1** 항목 옆의 체크박스를 선택합니다.
-1. **다음: 추가 요금제 >** 를 클릭합니다.
-1. **추가 요금제** 설정은 기본값으로 유지하고 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
-
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+1. 向用户提供应用服务资源（以云操作员的身份）
+1. 创建 Web 应用（以用户身份）
 
 
-#### 작업 2: 웹앱 만들기(사용자 역할)
+### <a name="task-1-make-app-service-resources-available-to-users-as-a-cloud-operator"></a>任务 1：向用户提供应用服务资源（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 테스트 사용자 계정 만들기
-- 웹앱 만들기(사용자 역할)
+- 向用户提供应用服务资源（以云操作员的身份）
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 **시작**을 클릭하고 시작 메뉴에서 **Windows 관리 도구**를 클릭합니다. 그런 다음 관리 도구 목록에서 **Active Directory 관리 센터**를 두 번 클릭합니다.
-1. **Active Directory 관리 센터** 콘솔에서 **azurestack(로컬)** 을 클릭합니다.
-1. 세부 정보 창에서 **사용자** 컨테이너를 두 번 클릭합니다.
-1. **작업** 창의 **사용자** 섹션에서 **새로 만들기 -> 사용자**를 클릭합니다.
-1. **사용자 만들기** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다. 
+1. 在与 AzS-HOST1 的远程桌面会话中，切换到显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的浏览器窗口。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“+ 创建资源”。
+1. 在“新建”边栏选项卡上，单击“套餐 + 计划”，然后单击“计划”  。
+1. 在“新建计划”边栏选项卡的“基本信息”选项卡上，指定以下设置 ：
 
-    - 전체 이름: **T1U1**
-    - 사용자 UPN 로그온: **t1u1@azurestack.local**
-    - 사용자 SamAccountName: **azurestack\t1u1**
-    - 암호: **Pa55w.rd**
-    - 암호 옵션: **기타 암호 옵션 -> 암호 사용 기간 제한 없음**
+    - 显示名称：app-service-plan1
+    - 资源名称：app-service-plan1
+    - 资源组：新资源组名称 app-service-plans-RG
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저의 InPrivate 세션을 시작합니다.
-1. 웹 브라우저 창에서 [Azure Stack Hub 사용자 포털](https://portal.local.azurestack.external)로 이동하여 **Pa55w.rd** 암호를 사용해 **t1u1@azurestack.local**로 로그인합니다.
-1. Azure Stack Hub 사용자 포털의 대시보드에서 **구독 가져오기** 타일을 클릭합니다.
-1. **구독 가져오기** 블레이드의 **이름** 텍스트 상자에 **t1u1-app-service-subscription1**을 입력합니다.
-1. 제안 목록에서 **app-service-offer1**을 선택하고 **만들기**를 클릭합니다.
-1. **구독이 생성되었습니다. 구독을 사용해서 시작하려면 포털을 새로 고쳐야 합니다.** 메시지가 표시되면 **새로 고침**을 클릭합니다. 
-1. Azure Stack Hub 테넌트 포털의 허브 메뉴에서 **+ 리소스 만들기**를 클릭합니다.
-1. 서비스 목록에서 **웹 + 모바일**을 클릭한 다음 **웹앱**을 클릭합니다. 
-1. **웹앱** 블레이드에서 다음 설정을 지정합니다.
+1. 单击“下一步:服务 >”。
+1. 在“新建计划”边栏选项卡的“服务”选项卡上，选中“Microsoft.Web”复选框  。
+1. 单击“下一步:配额 >”。
+1. 在“新建计划”边栏选项卡的“配额”选项卡上，选择“新建”，然后在“创建”边栏选项卡上，指定以下设置，并单击“确定”    ：
 
-    - 구독: **t1u1-app-service-subscription1**
-    - 앱 이름: **t1u1webapp1**
-    - 리소스 그룹: 새 리소스 그룹 **webapps-RG**의 이름.
+    - 名称：app-service-quota1
+    - 应用服务计划：自定义 20 
+    - 共享应用服务计划：自定义 10 
+    - 专用应用服务计划：自定义 10 
+    - 定价 SKU：已选择选自定义 2（“免费”和“共享”）   
+    - 消耗计划：**已启用**
 
-1. **웹앱** 블레이드에서 **App Service 계획/위치**를 클릭하고 **App Service 계획** 블레이드에서 **+ 새로 만들기**를 클릭합니다. 
-1. **새 App Service 계획** 블레이드에서 다음 설정을 지정합니다.
+    >**注意**：若要在消耗计划模型中提供 Azure Functions，需要部署共享的 Web 辅助角色。
 
-    - App Service 계획: **appserviceplan1**
-    - 위치: **로컬**
+1. 回到“新建计划”边栏选项卡的“配额”选项卡，单击“查看 + 创建”，然后单击“创建”   。
 
-1. **새 App Service 계획** 블레이드에서 **가격 책정 계층**을 클릭합니다.
-1. **사양 선택기** 블레이드에서 **F1** 가격 책정 계층을 선택하고 **적용**을 클릭합니다.
-1. **새 App Service 계획** 블레이드로 돌아와서 **확인**을 클릭합니다.
-1. **웹앱** 블레이드로 돌아와서 **만들기**를 클릭합니다.
+    >**注意**：等待部署完成。 这应该只需要几秒钟时间。
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 1분도 걸리지 않습니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，返回到“新建”边栏选项卡，单击“套餐”  。
+1. 在“新建套餐”边栏选项卡的“基本信息”选项卡中，指定以下设置 ：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 Azure Stack Hub 사용자 포털이 표시된 웹 브라우저 InPrivate 세션 내 허브 메뉴에서 **모든 리소스**를 클릭합니다.
-1. **모든 리소스** 블레이드의 구독 필터 드롭다운 목록에서 **t1u1-app-service-subscription1** 항목을 선택하고 **새로 고침**을 클릭합니다.
-1. **모든 리소스** 블레이드의 리소스 목록에서 **t1u1webapp1** 항목을 클릭합니다.
-1. **t1u1webapp1** 블레이드에서 **찾아보기**를 클릭합니다.
+    - 显示名称：app-service-offer1
+    - 资源名称：app-service-offer1
+    - 资源组：app-service-offers-RG
+    - 公开提供此套餐：**是**
 
-    >**참고**: 그러면 다른 브라우저 탭이 열리고 새로 프로비전한 웹앱의 기본 홈 페이지가 표시됩니다.
+1. 单击“下一步:基本计划 >”。 
+1. 在“新建套餐”边栏选项卡的“基本计划”选项卡上，选中“app-service-plan1”条目旁边的复选框  。
+1. 单击“下一步:附加产品计划 >”。
+1. 保留“附加产品计划”设置为默认值，单击“查看 + 创建”，然后单击“创建”  。
 
->**검토**: 이 연습에서는 App Service를 사용자에게 제공했으며 테넌트 사용자로 웹앱을 만들었습니다.
+    >**注意**：等待部署完成。 这应该只需要几秒钟时间。
+
+
+#### <a name="task-2-create-a-web-app-as-a-user"></a>任务 2：创建 Web 应用（以用户身份）
+
+在此任务中，你将：
+
+- 创建测试用户帐户
+- 创建 Web 应用（以用户身份）
+
+1. 在与 AzS-HOST1 的远程桌面会话中，单击“开始”，在“开始”菜单中，单击“Windows 管理工具”，然后在管理工具列表中，双击“Active Directory 管理中心”   。
+1. 在“Active Directory 管理中心”控制台中，单击“azurestack(本地)” 。
+1. 在“详细信息”窗格中，双击“用户”容器。
+1. 在“任务”窗格的“用户”部分中，单击“新建”->“用户”  。
+1. 在“创建用户”窗口中，指定以下设置，然后单击“确定” ： 
+
+    - 全名：T1U1
+    - 用户 UPN 登录名：t1u1@azurestack.local
+    - 用户 SamAccountName：azurestack\t1u1
+    - 密码：Pa55w.rd
+    - 密码选项：“其他密码选项”->“密码永不过期”
+
+1. 在与 AzS-HOST1 的远程桌面会话中，启动 Web 浏览器的 InPrivate 会话。
+1. 在 Web 浏览器窗口中，导航到 [Azure Stack Hub 用户门户](https://portal.local.azurestack.external)并使用 t1u1@azurestack.local 和密码 Pa55w.rd 登录 。
+1. 在 Azure Stack Hub 用户门户中，单击“仪表板”上的“获取订阅”磁贴。
+1. 在“获取订阅”边栏选项卡的“名称”文本框中，键入“t1u1-app-service-subscription1”  。
+1. 在套餐列表中，选择“app-service-offer1”，然后单击“创建” 。
+1. 出现消息“订阅已创建。必须刷新门户才能开始使用订阅”时，单击“刷新”。 
+1. 在 Azure Stack Hub 租户门户中心菜单中，单击“+ 创建资源”。
+1. 在服务列表中，单击“Web + 移动”，然后单击“Web 应用” 。 
+1. 在“Web 应用”边栏选项卡上，指定以下设置：
+
+    - 订阅：t1u1-app-service-subscription1
+    - 应用名称：t1u1webapp1
+    - 资源组：新资源组名称 webapps-RG
+
+1. 在“Web 应用”边栏选项卡上，单击“应用服务计划/位置”，在“应用服务计划”边栏选项卡上，单击“+ 新建”   。 
+1. 在“新建应用服务计划”边栏选项卡上，指定以下设置：
+
+    - 应用服务计划：appserviceplan1
+    - 位置：本地
+
+1. 在“新建应用服务计划”边栏选项卡上，单击“定价层” 。
+1. 在“规格选取器”边栏选项卡上，选择“F1”定价层并单击“应用”  。
+1. 返回“新建应用服务计划”边栏选项卡，单击“确定” 。
+1. 返回“Web 应用”边栏选项卡，单击“创建” 。
+
+    >**注意**：等待部署完成。 这应该可以在一分钟内完成。
+
+1. 在与 AzS-HOST1 的远程桌面会话中，在显示 Azure Stack Hub 用户门户的 Web 浏览器的 InPrivate 会话中，在中心菜单中选择“所有资源” 。
+1. 在“所有资源”边栏选项卡的订阅筛选器下拉列表中，选择“t1u1-app-service-subscription1”条目，然后单击“刷新”  。
+1. 在“所有资源”边栏选项卡上的资源列表中，单击“t1u1webapp1”条目 。
+1. 在“t1u1webapp1”边栏选项卡上，单击“浏览” 。
+
+    >**注意**：此操作应会打开另一个浏览器选项卡，其中显示新预配的 Web 应用的默认主页。
+
+>回顾：在本练习中，你向用户提供了应用服务，并以租户用户身份创建了 Web 应用。

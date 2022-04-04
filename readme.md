@@ -1,35 +1,43 @@
-﻿# AZ-600: Microsoft Azure Stack Hub 구성 및 운영
+---
+ms.openlocfilehash: be365681126e0c4dea6d53b37dbb9c6c1b29bf27
+ms.sourcegitcommit: 4949ab968553abc20d2d72d6fd30a33ffae0317a
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 01/13/2022
+ms.locfileid: "137893084"
+---
+# <a name="az-600-configuring-and-operating-microsoft-azure-stack-hub"></a>AZ-600：配置和操作 Microsoft Azure Stack Hub
 
-- **[최신 학생용 핸드북 및 AllFiles 콘텐츠 다운로드](../../releases/latest)**
-- **MCT입니까?** - [MCT용 GitHub 사용자 가이드](https://microsoftlearning.github.io/MCT-User-Guide-KO/)를 살펴보세요.
-- **랩 명령을 수동으로 빌드해야 합니까?** - [MicrosoftLearning/Docker-Build](https://github.com/MicrosoftLearning/Docker-Build) 리포지토리에서 명령을 사용할 수 있습니다.
+- **[下载最新学生手册和 AllFiles 内容](../../releases/latest)**
+- **你是 MCT 吗？** - 查看 [MCT GitHub 用户指南](https://microsoftlearning.github.io/MCT-User-Guide/)
+- **需要手动生成实验室说明？** - [MicrosoftLearning/Docker-Build ](https://github.com/MicrosoftLearning/Docker-Build) 存储库中提供了说明
 
-## Microsoft의 역할
+## <a name="what-are-we-doing"></a>我们要做什么？
 
-- 이 과정을 지원하려면 과정 콘텐츠를 자주 업데이트하여 해당 과정에 사용된 Azure 서비스를 최신 상태로 유지해야 합니다.  GitHub에 랩 지침 및 랩 파일을 게시하여 과정 작성자 및 MCT 간의 공개적인 기여를 통해 Azure 플랫폼의 변경 내용에 따라 콘텐츠를 최신 상태로 유지하도록 합니다.
+- 为支持此课程，我们需要经常更新课程内容，使其与课程中使用的 Azure 服务保持同步。  我们正在 GitHub 上发布实验室说明和实验室文件，使课程作者和 MCT 之间能够以开放的方式做出贡献，使内容与 Azure 平台中的更改保持同步。
 
-- 여러분도 이와 같은 새로운 공동 작업 방식 랩 개선 과정에 참여하실 수 있습니다. 실제 강의를 진행하는 과정에서 Azure의 변경 내용을 처음으로 확인하시는 분은 랩 원본을 바로 개선해 주시기 바랍니다.  그러면 다른 MCT가 랩을 더욱 효율적으로 진행할 수 있습니다.
+- 我们希望这会给实验室带来前所未有的协作感 - 当 Azure 发生变化，并且你在实时交付期间首先发现它时，就在实验室的源头上进行增强。  帮助你的 MCT 伙伴们。
 
-## 릴리스된 MOC 파일과 비교하여 이러한 파일을 사용하려면 어떻게 해야 합니까?
+## <a name="how-should-i-use-these-files-relative-to-the-released-moc-files"></a>相对于已发布的 MOC 文件，应如何使用这些文件？
 
-- 강사 핸드북과 PowerPoint는 여전히 과정 콘텐츠를 가르치는 기본적인 자료로 사용될 것입니다.
+- 讲师手册和 PowerPoint 仍将是教授课程内容的主要来源。
 
-- GitHub의 이러한 파일은 수강생 핸드북과 함께 사용할 수 있도록 설계되었지만 중앙 리포지토리 역할을 하는 GitHub에 위치합니다. 따라서 MCT와 과정 작성자가 최신 랩 파일에 대한 소스를 공유할 수 있습니다.
+- GitHub 上的这些文件旨在与学员手册一起使用，但在 GitHub 中是作为中心存储库，因此 MCT 和课程作者可以拥有最新实验室文件的共享源。
 
-- 트레이너는 각 강의를 제공할 때마다 GitHub에서 최신 Azure 서비스를 지원하기 위해 변경된 내용을 확인하고 최신 파일을 가져와서 강의에 사용하는 것이 좋습니다.
+- 建议在每次交付时，培训师检查 GitHub 是否为支持最新的 Azure 服务进行了任何更改，并获取最新的交付文件。
 
-## 수강생 핸드북의 변경 사항은 어떻게 됩니까?
+## <a name="what-about-changes-to-the-student-handbook"></a>学员手册有什么变化？
 
-- 수강생 핸드북의 경우 분기별로 검토가 진행되며 필요에 따라 일반 MOC 릴리스 채널을 통해 업데이트됩니다.
+- 我们将按季度审核学员手册，并根据需要通过标准 MOC 版本通道进行更新。
 
-## 기여하려면 어떻게 해야 합니까?
+## <a name="how-do-i-contribute"></a>如何做出贡献？
 
-- 모든 MCT는 GitHub 리포지토리의 코드 또는 콘텐츠에 대한 끌어오기 요청을 제출할 수 있습니다. Microsoft와 과정 작성자는 콘텐츠 및 랩 코드 변경을 선별하고 필요에 따라 포함합니다.
+- 任何 MCT 都可向 GitHub 存储库中的代码或内容提交拉取请求，Microsoft 和课程作者将根据需要进行分流并纳入内容和实验室代码的更改。
 
-- MCT는 버그, 변경 사항, 개선 사항 및 아이디어를 제출할 수 있습니다.  Microsoft보다 먼저 새로운 Azure 기능을 찾았다면  새로운 데모를 제출해 주세요!
+- 你可以提交 bug、更改、改进和想法。  先于我们找到了新的 Azure 功能？  提交新演示！
 
-## 참고
+## <a name="notes"></a>说明
 
-### 강의 자료
+### <a name="classroom-materials"></a>课堂材料
 
-MCT와 파트너는 이러한 자료에 액세스하고 수강생에게 개별적으로 제공하는 것이 좋습니다.  수업 진행 중에 수강생에게 GitHub 랩 단계를 직접 액세스하도록 하면 과정의 일부로 다른 UI에 액세스해야 하므로 수강생이 혼란을 겪을 수 있습니다. 수강생에게 별도의 랩 지침을 사용해야 하는 이유를 설명하면 계속 변경되는 클라우드 기반 인터페이스 및 플랫폼의 특성을 강조하는 데 도움이 됩니다. GitHub 파일 액세스와 GitHub 사이트 탐색에 대한 Microsoft Learning 지원은 이 과정을 가르치는 MCT에게만 제공됩니다.
+强烈建议 MCT 和合作伙伴访问这些材料，然后将它们单独提供给学生。  如果让学生直接访问 GitHub 来获取所授课程中包含的实验室步骤，这将要求他们访问课程中的另一个 UI，容易让学生感到混淆。 而向学生解释为何收到单独的实验室说明可以强调不断变化的基于云的接口和平台的性质。 Microsoft Learning 对访问 GitHub 上的文件的支持以及对 GitHub 站点导航的支持仅限于教授本课程的 MCT。
