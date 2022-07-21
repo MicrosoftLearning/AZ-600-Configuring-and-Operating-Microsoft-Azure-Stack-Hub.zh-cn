@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中实现应用服务资源提供程序
   module: 'Module 2: Provide Services'
-ms.openlocfilehash: 131748436ff67e32dd18e5ee5fb1fda7beedd2af
-ms.sourcegitcommit: 4949ab968553abc20d2d72d6fd30a33ffae0317a
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 01/13/2022
-ms.locfileid: "137893086"
 ---
+
 # <a name="lab---implement-app-service-resource-provider-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中实现应用服务资源提供程序
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -91,7 +86,7 @@ ms.locfileid: "137893086"
     - 名称：SqlHOST1
     - VM 磁盘类型：**高级·SSD**
     - 用户名：sqladmin
-    - 密码：Pa55w.rd
+    - 密码：Pa55w.rd1234
     - 订阅：默认提供商订阅
     - 资源组：新资源组名称 sql.resources-RG
     - 位置：本地
@@ -119,7 +114,7 @@ ms.locfileid: "137893086"
     - 端口：1433
     - SQL 身份验证：启用
     - 登录名：SQLAdmin
-    - 密码：Pa55w.rd
+    - 密码：Pa55w.rd1234
     - 存储配置：**常规**
     - 自动修补：禁用
     - 自动备份：禁用
@@ -127,7 +122,7 @@ ms.locfileid: "137893086"
 
 1. 在“创建虚拟机”边栏选项卡的“摘要”窗格中，单击“确定”。
 
-    >**注意**：等待部署完成。 该操作需要约 20 分钟。
+    >备注：请等待部署完成。 该操作需要约 20 分钟。
 
 1. 部署完成后，导航到“SqlHOST1”虚拟机边栏选项卡，在“概述”部分的“DNS 名称”标签下，单击“配置”   。
 1. 在“SqlHOST1-ip \| 配置”边栏选项卡的“DNS 名称标签(可选)”文本框中，键入“sqlhost1”并单击“保存”。   
@@ -141,7 +136,7 @@ ms.locfileid: "137893086"
 1. 在与 AzSHOST-1 的远程桌面会话中，启动与 sqlhost1.local.cloudapp.azurestack.external 的远程桌面会话，并在出现提示时使用以下凭据登录 ：
 
     - 用户名：SQLAdmin
-    - 密码：Pa55w.rd
+    - 密码：Pa55w.rd1234
 
 1. 在与 SqlHOST1 的远程桌面会话中，右键单击“开始”，然后在右键菜单中选择“命令提示符(管理员)”  。 
 1. 在与 SqlHOST1 的远程桌面会话中，从“管理员: 命令提示符”中运行以下命令，以启动与本地 SQL Server 实例的 SQLCMD 会话：
@@ -352,7 +347,7 @@ ms.locfileid: "137893086"
 
     > **注意：** 这将启动 Microsoft Azure 应用服务安装向导。
 
-1. 单击“部署应用服务或升级到最新版本”。
+1. 单击“部署应用服务或升级到最新版本”。****
 1. 在“MICROSOFT 软件补充许可条款”页上，查看内容，单击“我已阅读、理解并同意这些许可条款”复选框，然后单击“下一步”  。
 1. 在显示第三方许可条款的页面上，查看内容，单击“我已阅读、理解并同意这些许可条款”复选框，然后单击“下一步” 。
 1. 在显示管理员终结点和租户 ARM 终结点的页面上，验证信息是否正确，然后单击“下一步”。
@@ -398,7 +393,7 @@ ms.locfileid: "137893086"
     - 前端角色：1 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
     - 共享辅助角色：1 个实例 - Standard_A1_v2 - [1 个核心，2048 MB]
 
-1. 单击“下一步”。
+1. 单击“下一步”****。
 1. 在下一页上的“选择平台映像”下拉列表中，选择“2016 Datacenter - latest”映像，然后单击“下一步”  。
 1. 在下一页上，为部署指定以下管理员凭据：
 
@@ -582,7 +577,7 @@ ms.locfileid: "137893086"
 1. 单击“下一步:附加产品计划 >”。
 1. 保留“附加产品计划”设置为默认值，单击“查看 + 创建”，然后单击“创建”  。
 
-    >**注意**：等待部署完成。 这应该只需要几秒钟时间。
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
 
 #### <a name="task-2-create-a-web-app-as-a-user"></a>任务 2：创建 Web 应用（以用户身份）

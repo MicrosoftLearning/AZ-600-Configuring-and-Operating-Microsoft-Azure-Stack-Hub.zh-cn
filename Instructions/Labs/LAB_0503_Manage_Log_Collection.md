@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中管理日志收集
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: 390643cfd94ddc4364e44c7c20d160d33b231eb7
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251630"
 ---
+
 # <a name="lab---manage-log-collection-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理日志收集
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -223,7 +218,7 @@ ms.locfileid: "139251630"
 
 1. 等待该 cmdlet 完成，然后在文件资源管理器中查看 C:\\AzSHLogs 文件夹的内容以验证日志已上传。
 
-    >**注意**：该文件夹应包含与你启动的每个单独副本相对应的文件夹。 这些文件夹的名称应采用 AzureStackLogs-YYYYMMDDHHMMSS-AZS-ERCS01 格式，其中 YYYYMMDDHHMMSS 表示副本的时间戳 。
+    >**注意**：该文件夹应包含与你启动的每个单独副本相对应的文件夹。 这些文件夹的名称应采用 AzureStackLogs-YYYYMMDDHHMMSS-AZS-ERCS01 格式，其中 YYYYMMDDHHMMSS 表示副本的时间戳。
 
 1. 在“Administrator: Windows PowerShell”窗口的 PowerShell 远程处理会话提示符下，运行以下命令以关闭该会话：
 
