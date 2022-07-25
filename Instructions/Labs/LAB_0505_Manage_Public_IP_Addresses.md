@@ -1,309 +1,218 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub에서 공용 IP 주소 관리'
-    module: '모듈 5: 인프라 관리'
+  title: 实验室：在 Azure Stack Hub 中管理公共 IP 地址
+  module: 'Module 5: Manage Infrastructure'
+ms.openlocfilehash: fd9c6f35024c4753fe27d86cef8fd47dd48764f3
+ms.sourcegitcommit: fd0b6231a00e8c86b46d914b2b6c4d984bc19902
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/02/2022
+ms.locfileid: "139256867"
 ---
+# <a name="lab---manage-public-ip-addresses-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理公共 IP 地址
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub에서 공용 IP 주소 관리
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要管理公共 IP 地址资源。 
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 공용 IP 주소 리소스를 관리해야 합니다. 
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 管理公共 IP 地址资源
 
-- 공용 IP 주소 리소스 관리
+## <a name="lab-environment"></a>实验室环境
 
-## 랩 환경
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境由以下部分组成：
 
-랩 환경에는 다음과 같은 구성 요소가 포함됩니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 你还将创建其他用户帐户。
 
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 그리고 사용자 계정을 추가로 만듭니다.
+## <a name="instructions"></a>Instructions
 
-## 지침
+### <a name="exercise-1-create-an-offer-as-a-cloud-operator"></a>练习 1：创建套餐（以云操作员的身份）
 
-### 연습 0: 랩 준비
+在本练习中，你将充当云操作员。 首先，你将查看公共 IP 地址的使用情况，然后创建一个包含网络服务的计划和一个包含该计划的套餐。 接下来，你将公开此套餐，允许用户基于此套餐创建订阅。 该练习由以下任务组成：
 
-이 연습에서는 이 랩에서 사용할 Active Directory 사용자 계정을 만듭니다.
+1. 查看公共 IP 地址的使用情况（以云操作员的身份）
+1. 创建一个包含网络服务的计划（以云操作员的身份）。
+1. 创建一个基于该计划的套餐并将其公开（以云操作员的身份）
 
-1. 사용자 계정 만들기(클라우드 운영자 역할)
 
-#### 작업 1: 사용자 계정 만들기(클라우드 운영자 역할)
+#### <a name="task-1-review-public-ip-address-usage-as-a-cloud-operator"></a>任务 1：查看公共 IP 地址的使用情况（以云操作员的身份）
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 사용자 계정 만들기(클라우드 운영자 역할)
+- 查看公共 IP 地址的使用情况（以云操作员的身份）。
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在 Azure Stack Hub 管理员门户的“仪表板”页面上的“资源提供程序”磁贴中，单击“网络”  。 
+1. 在“网络”边栏选项卡上，记下“公共 IP 池使用情况”图以及已使用和可用 IP 地址的数量 。
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+#### <a name="task-2-create-a-plan-consisting-of-the-network-services-as-a-cloud-operator"></a>任务 2：创建一个包含网络服务的计划（以云操作员的身份）
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 **시작**을 클릭하고 시작 메뉴에서 **Windows 관리 도구**를 클릭합니다. 그런 다음 관리 도구 목록에서 **Active Directory 관리 센터**를 두 번 클릭합니다.
-1. **Active Directory 관리 센터** 콘솔에서 **azurestack(로컬)** 을 클릭합니다.
-1. 세부 정보 창에서 **사용자** 컨테이너를 두 번 클릭합니다.
-1. **작업** 창의 **사용자** 섹션에서 **새로 만들기 -> 사용자**를 클릭합니다.
-1. **사용자 만들기** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다. 
+在此任务中，你将：
 
-    - 전체 이름: **T1U1**
-    - 사용자 UPN 로그온: **t1u1@azurestack.local**
-    - 사용자 SamAccountName: **azurestack\t1u1**
-    - 암호: **Pa55w.rd**
-    - 암호 옵션: **기타 암호 옵션 -> 암호 사용 기간 제한 없음**
+- 创建一个包含网络服务的计划（以云操作员的身份）。
 
->**검토**: 이 연습에서는 이 랩에서 사용할 Active Directory 계정을 만들었습니다.
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“+ 创建资源”。 
+1. 在“新建”边栏选项卡上，单击“套餐 + 计划” 。
+1. 在“套餐 + 计划”边栏选项卡上，单击“计划” 。
+1. 在“新建计划”边栏选项卡的“基本信息”选项卡上，指定以下设置 ：
 
+    - 显示名称：Network-plan1
+    - 资源名称：network-plan1
+    - 资源组：新资源组名称 network-plans-RG
 
-### 연습 1: 제안 만들기(클라우드 운영자 역할)
+1. 单击“下一步:服务 >”。
+1. 在“新建计划”边栏选项卡的“服务”选项卡上，选中“Microsoft.Network”复选框  。
+1. 单击“下一步:配额 >”。
+1. 在“新建计划”边栏选项卡的“配额”选项卡上，选择“新建”  。
+1. 在“创建网络配额”边栏选项卡上，指定以下设置，然后单击“确定” ：
 
-이 연습에서는 클라우드 운영자 역할을 맡아 먼저 공용 IP 주소 사용량을 검토한 다음 네트워크 서비스가 포함된 요금제, 그리고 이 요금제가 포함된 제안을 만듭니다. 그런 다음 사용자가 해당 제안을 기준으로 구독을 만들 수 있도록 제안을 공개합니다. 이 연습에서는 다음 작업을 수행합니다.
+    - 名称：Network-plan1-quota
+    - 虚拟网络：**2**
+    - 虚拟网络网关：**2**
+    - 虚拟网络连接：**2**
+    - 公共 IP：20
+    - NIC：20
+    - 负载均衡器：5
+    - 网络安全组：20
 
-1. 공용 IP 주소 사용량 검토(클라우드 운영자 역할)
-1. 네트워크 서비스가 포함된 요금제 만들기(클라우드 운영자 역할)
-1. 요금제를 기준으로 제안을 만들고 공용으로 설정(클라우드 운영자 역할)
+1. 依次单击“查看 + 创建”、“创建”。 
 
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-#### 작업 1: 공용 IP 주소 사용량 검토(클라우드 운영자 역할)
 
-이 작업에서는 다음을 수행합니다.
+#### <a name="task-3-create-an-offer-based-on-the-plan-as-a-cloud-operator"></a>任务 3：根据该计划创建一个套餐（以云操作员的身份）
 
-- 공용 IP 주소 사용량 검토(클라우드 운영자 역할)
+在此任务中，你将：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 사용자 포털의 **대시보드** 페이지 **리소스 공급자** 타일에서 **네트워크**를 클릭합니다. 
-1. **네트워크** 블레이드에서 **공용 IP 풀 사용량** 그래프, 그리고 사용 중인 IP 주소 및 사용 가능한 IP 주소 수를 확인합니다.
+- 根据该计划创建一个套餐（以云操作员的身份）
 
-#### 작업 2: 네트워크 서비스가 포함된 요금제 만들기(클라우드 운영자 역할)
+1. 在 Azure Stack Hub 管理员门户的主菜单中，单击“+ 创建资源”。 
+1. 在“新建”边栏选项卡上，单击“套餐 + 计划” 。
+1. 在“套餐 + 计划”边栏选项卡上，单击“套餐” 。
+1. 在“新建套餐”边栏选项卡的“基本信息”选项卡中，指定以下设置 ：
 
-이 작업에서는 다음을 수행합니다.
+    - 显示名称：Network-offer1
+    - 资源名称：network-offer1
+    - 资源组：名为 network-offers-RG 的新资源组
+    - 公开提供此套餐：**是**
 
-- 네트워크 서비스가 포함된 요금제 만들기(클라우드 운영자 역할)
+1. 单击“下一步:基本计划 >”。 
+1. 在“新建套餐”边栏选项卡的“基本计划”选项卡上，选中“Network-plan1”条目旁边的复选框  。
+1. 单击“下一步:附加产品计划 >”。
+1. 保留“附加产品计划”设置为默认值，单击“查看 + 创建”，然后单击“创建”  。
 
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **+ 리소스 만들기**를 클릭합니다. 
-1. **새로 만들기** 블레이드에서 **제안+요금제**를 클릭합니다.
-1. **제안+요금제** 블레이드에서 **요금제**를 클릭합니다.
-1. **새 요금제** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+    >备注：请等待部署完成。 这应该只需要几秒钟时间。
 
-    - 표시 이름: **Network-plan1**
-    - 리소스 이름: **network-plan1**
-    - 리소스 그룹: 새 리소스 그룹 **network-plans-RG**의 이름.
+>回顾：在本练习中，你创建了一个计划，并基于该计划创建了一个公共套餐。
 
-1. **다음: 서비스 >** 를 클릭합니다.
-1. **새 요금제** 블레이드의 **서비스** 탭에서 **Microsoft.Network** 체크박스를 선택합니다.
-1. **다음: 할당량>** 을 클릭합니다.
-1. **새 요금제** 블레이드의 **할당량** 탭에서 **새로 만들기**를 선택합니다.
-1. **네트워크 할당량 만들기** 블레이드에서 다음 설정을 지정하고 **확인**을 클릭합니다.
 
-    - 이름: **Network-plan1-quota**
-    - 최대 가상 네트워크 수: **2**
-    - 최대 가상 네트워크 게이트웨이 수: **2**
-    - 최대 네트워크 연결 수: **2**
-    - 최대 공용 IP 수: **20**
-    - 최대 NIC 수: **20**
-    - 최대 부하 분산 장치 수: **5**
-    - 최대 네트워크 보안 그룹 수: **20**
+### <a name="exercise-2-create-public-ip-address-resources-as-a-user"></a>练习 2：创建公共 IP 地址资源（以用户的身份）
 
-1. **검토 + 만들기**와 **만들기**를 차례로 클릭합니다.
+在本练习中，你将充当注册了在第一个练习中创建的套餐，创建了新订阅并在该订阅中创建了公共 IP 地址资源的用户。 该练习由以下任务组成：
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+1. 注册套餐（以用户的身份）
+1. 创建 IP 地址资源（以用户的身份）
 
+#### <a name="task-1-sign-up-for-the-offer-as-a-user"></a>任务 1：注册套餐（以用户的身份）
 
-#### 작업 3: 요금제를 기준으로 제안 만들기(클라우드 운영자 역할)
+在此任务中，你将：
 
-이 작업에서는 다음을 수행합니다.
+- 注册套餐（以用户的身份）
 
-- 요금제를 기준으로 제안 만들기(클라우드 운영자 역할)
+1. 1. 在与 AzS-HOST1 的远程桌面会话中，启动 Web 浏览器的 InPrivate 会话。
+1. 在 Web 浏览器窗口中，导航到 [Azure Stack Hub 用户门户](https://portal.local.azurestack.external)并使用 t1u1@azurestack.local 和密码 Pa55w.rd 登录 。
+1. 在 Azure Stack Hub 用户门户中，单击“仪表板”上的“获取订阅”。
+1. 在“获取订阅”边栏选项卡的“名称”文本框中，键入“T1U1-network-subscription1”  。
+1. 在套餐列表中，选择“Network-offer1”，然后单击“创建” 。
+1. 在“订阅已创建。必须刷新门户才能开始使用订阅”时，单击“刷新”。
 
-1. Azure Stack Hub 관리자 포털에서 **+ 리소스 만들기**를 클릭합니다. 
-1. **새로 만들기** 블레이드에서 **제안+요금제**를 클릭합니다.
-1. **제안+요금제** 블레이드에서 **제안**을 클릭합니다.
-1. **새 제안 만들기** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+#### <a name="task-2-create-a-public-ip-address-as-a-user"></a>任务 2：创建公共 IP 地址（以用户的身份）
 
-    - 표시 이름: **Network-offer1**
-    - 리소스 이름: **network-offer1**
-    - 리소스 그룹: 새 리소스 그룹 **network-offers-RG**
-    - 이 제안을 공개로 설정: **예**
+在此任务中，你将：
 
-1. **다음: 기본 요금제 >** 를 클릭합니다. 
-1. **새 제안 만들기** 블레이드의 **기본 요금제** 탭에서 **Network-plan1** 항목 옆의 체크박스를 선택합니다.
-1. **다음: 추가 요금제 >** 를 클릭합니다.
-1. **추가 요금제** 설정은 기본값으로 유지하고 **검토 + 만들기**를 클릭한 다음 **만들기**를 클릭합니다.
+- 使用 Azure Stack Hub 用户门户创建公共 IP 地址（以用户的身份）
 
-    >**참고**: 배포가 완료될 때까지 기다립니다. 몇 초면 끝납니다.
+1. 在 Azure Stack Hub 用户门户中，单击“仪表板”上的“+ 创建资源”。
+1. 在“市场”边栏选项卡上，选择“公共 IP 地址”，然后在“公共 IP 地址”边栏选项卡上，选择“创建”   。
+1. 在“创建公共 IP 地址”边栏选项卡上，指定以下设置并选择“创建”（将所有其他设置保留为默认值） ：
 
->**검토**: 이 연습에서는 요금제, 그리고 해당 요금제를 기반으로 하는 공용 제안을 만들었습니다.
+    - 名称：t1-pip1
+    - IP 地址分配：**动态**
+    - 空闲超时（分钟）：**4**
+    - DNS 名称标签：t1-pip1
+    - 订阅：T1U1-network-subscription1
+    - 资源组：新资源组，名为 publicIPs-RG
+    - 位置：本地
 
+1. 等待 IP 地址资源预配完成。
 
-### 연습 2: 공용 IP 주소 리소스 만들기(사용자 역할)
+>回顾：完成本练习后，你已在用户订阅中创建了公共 IP 地址资源。
 
-이 연습에서는 사용자 역할을 맡아 첫 번째 연습에서 만든 제안에 등록하고 새 구독을 만든 다음 해당 구독에서 공용 IP 주소 리소스를 만듭니다. 이 연습에서는 다음 작업을 수행합니다.
+### <a name="exercise-3-manage-public-ip-address-usage-as-a-cloud-operator"></a>练习 3：管理公共 IP 地址的使用情况（以云操作员的身份）
 
-1. 제안에 등록(사용자 역할)
-1. Azure Stack Hub 사용자 Azure Resource Manager 엔드포인트에 연결(사용자 역할)
-1. IP 주소 리소스 만들기(사용자 역할)
+在本练习中，你将充当云操作员，查看和管理公共 IP 地址的使用情况。 该练习由以下任务组成：
 
-#### 작업 1: 제안에 등록(사용자 역할)
+1. 查看公共 IP 地址的使用情况
+2. 添加公共 IP 地址池
 
-이 작업에서는 다음을 수행합니다.
+#### <a name="task-1-review-public-ip-address-usage-as-a-cloud-operator"></a>任务 1：查看公共 IP 地址的使用情况（以云操作员的身份）
 
-- 제안에 등록(사용자 역할)
+在此任务中，你将：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저의 InPrivate 세션을 시작합니다.
-1. 웹 브라우저 창에서 [Azure Stack Hub 사용자 포털](https://portal.local.azurestack.external)로 이동하여 **Pa55w.rd** 암호를 사용해 **t1u1@azurestack.local**로 로그인합니다.
-1. Azure Stack Hub 사용자 포털의 대시보드에서 **구독 가져오기**를 클릭합니다.
-1. **구독 가져오기** 블레이드의 **표시 이름** 텍스트 상자에 **T1U1-network-subscription1**을 입력합니다.
-1. 제안 목록에서 **Network-offer1**을 선택하고 **만들기**를 클릭합니다.
-1. **구독이 생성되었습니다. 구독을 사용해서 시작하려면 포털을 새로 고쳐야 합니다.** 메시지가 표시되면 **새로 고침**을 클릭합니다.
+- 查看公共 IP 地址的使用情况（以云操作员的身份）。
 
+1. 切换到显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口，以 CloudAdmin@azurestack.local 身份登录。
+1. 在 Azure Stack Hub 管理员门户的主菜单中，单击“仪表板”，然后在“资源提供程序”磁贴上，单击“网络”  。
+1. 在“网络”边栏选项卡上，再次查看“公共 IP 池使用情况”图以及已使用和可用 IP 地址的数量 。
 
-#### 작업 2: Azure Stack Hub Azure Resource Manager 사용자 엔드포인트에 연결(사용자 역할)
+    >**注意**：这些数字应该已更改，反映出你（以用户的身份）在用户订阅中创建的其他公共 IP 地址。
 
-이 작업에서는 다음을 수행합니다.
+#### <a name="task-2-add-a-public-ip-address-pool-as-a-cloud-operator"></a>任务 2：添加公共 IP 地址池（以云操作员的身份）
 
-- Azure Stack Hub Azure Resource Manager 사용자 엔드포인트에 연결(사용자 역할)
+在此任务中，你将：
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
+- 添加公共 IP 地址池
 
-    >**참고**: Azure Stack Hub로의 PowerShell 연결을 설정하는 자세한 지침은 **PowerShell을 통해 Azure Stack Hub에 연결** 랩의 지침을 참조하세요.
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“网络”边栏选项卡上的“公共 IP 池使用情况”磁贴 。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 이 랩에 필요한 Azure Stack Hub PowerShell 모듈을 설치합니다.
+    >**注意**：如果“公共 IP 池”边栏选项卡显示消息“排他操作‘启动’正在进行中 **。该操作运行过程中，将禁用添加节点和添加 IP 池操作。单击此处查看活动日志”，则需要等待“启动”操作完成，然后再进行下一步**。
 
-    ```powershell
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Install-Module -Name Az.BootStrapper -Force -AllowPrerelease -AllowClobber
-    Install-AzProfile -Profile 2019-03-01-hybrid -Force
-    Install-Module -Name AzureStack -RequiredVersion 2.0.2-preview -AllowPrerelease
-    ```
+1. 在“公共 IP 池”边栏选项卡中，单击“+ 添加 IP 池” 。 
+1. 在“添加 IP 池”边栏选项卡上，指定以下设置并单击“添加” 。
 
-    >**참고**: 이미 사용 가능한 명령 관련 오류 메시지는 무시하세요.
+    - 名称：公共池 1
+    - 区域：本地
+    - 地址范围（CIDR 块）：192.168.110.0/24
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 도구를 다운로드한 후 압축을 풉니다.
+1. 等待更改生效，然后导航回“网络”边栏选项卡。
+1. 查看“公共 IP 池使用情况”图，并记下可用 IP 地址的数量变化。
 
-    ```powershell
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Set-Location -Path 'C:\'
-    Invoke-WebRequest https://github.com/Azure/AzureStack-Tools/archive/az.zip -OutFile az.zip
-    Expand-Archive az.zip -DestinationPath . -Force
-    Set-Location -Path '\AzureStack-Tools-az'
-    ```
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 사용자 환경을 등록합니다.
-
-    ```powershell
-    Add-AzEnvironment -Name 'AzureStackUser' -ArmEndpoint 'https://management.local.azurestack.external'
-    ```
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 브라우저 세션을 통해 **t1u1@azurestack.local** 사용자로 Azure Stack Hub 사용자 환경에 대한 인증을 시작합니다.
-
-    ```powershell
-    Connect-AzAccount -EnvironmentName 'AzureStackUser' -UseDeviceAuthentication
-    ```
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에 표시되는 메시지를 검토합니다. 그런 후에 InPrivate 모드에서 다른 웹 브라우저 창을 열고 [adfs.local.azurestack.external](https://adfs.local.azurestack.external/adfs/oauth2/deviceauth) 페이지로 이동하여 검토한 메시지에 포함된 코드를 입력합니다. 메시지가 표시되면 **t1u1@azurestack.local** 사용자로 다시 로그인합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창으로 다시 전환하여 **t1u1@azurestack.local** 사용자로 정상 인증되었는지 확인합니다.
-
-
-#### 작업 3: IP 주소 리소스 만들기(사용자 역할)
-
-이 작업에서는 다음을 수행합니다.
-
-- IP 주소 리소스 만들기(사용자 역할)
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 새로 프로비전한 구독을 사용 중인지 확인합니다. 
-
-    ```powershell
-    (Get-AzSubscription).Name
-    ```
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 현재 구독 내에서 네트워크 리소스 공급자를 등록합니다.
-
-    ```powershell 
-    Register-AzResourceProvider -ProviderNamespace Microsoft.Network
-    ```
-
-    >**참고**: 리소스 공급자가 관리하는 리소스를 만들려면 해당 공급자를 등록해야 합니다.
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 공용 IP 주소 리소스를 호스트할 리소스 그룹을 만듭니다.
-
-    ```powershell 
-    $rg = New-AzResourceGroup -Name publicIPs-RG -Location local
-    ```
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 공용 IP 주소 리소스를 만듭니다. 
-
-    ```powershell
-    1..5 | ForEach-Object {New-AzPublicIpAddress -Name "publicIP$_" -ResourceGroupName $rg.ResourceGroupName -AllocationMethod Static -Location local}
-    ```
-
-1. 모든 IP 주소 리소스가 프로비전될 때까지 기다립니다.
-
->**검토**: 이 연습에서는 사용자 구독에서 공용 IP 주소 리소스를 만들었습니다.
-
-
-### 연습 4: 공용 IP 주소 사용량 관리(클라우드 운영자 역할)
-
-이 연습에서는 클라우드 운영자 역할을 맡아 공용 IP 주소 사용량을 검토 및 관리합니다. 이 연습에서는 다음 작업을 수행합니다.
-
-1. 공용 IP 주소 사용량 검토
-2. 공용 IP 주소 풀 추가
-
-#### 작업 1: 공용 IP 주소 사용량 검토(클라우드 운영자 역할)
-
-이 작업에서는 다음을 수행합니다.
-
-- 공용 IP 주소 사용량 검토(클라우드 운영자 역할)
-
-1. Azure Stack Hub 관리자 포털이 표시되어 있으며 CloudAdmin@azurestack.local로 로그인되어 있는 웹 브라우저 창으로 전환합니다.
-1. Azure Stack Hub 관리자 포털의 허브 메뉴에서 **대시보드**를 클릭하고 **리소스 공급자** 타일에서 **네트워크**를 클릭합니다.
-1. **네트워크** 블레이드에서 **공용 IP 풀 사용량** 그래프, 그리고 사용 중인 IP 주소 및 사용 가능한 IP 주소 수를 다시 검토합니다.
-
-    >**참고**: 사용자 구독(사용자 역할)에서 추가로 만든 공용 IP 주소 5개가 반영되어 IP 주소 수가 변경된 상태여야 합니다.
-
-#### 작업 2: 공용 IP 주소 풀 추가(클라우드 운영자 역할)
-
-이 작업에서는 다음을 수행합니다.
-
-- 공용 IP 주소 풀 추가
-
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창의 **네트워크** 블레이드에서 **공용 IP 풀 사용량** 타일을 클릭합니다.
-
-    >**참고**: **공용 IP 풀** 블레이드에 **'시작' 단독 작업이 진행 중입니다. 해당 작업이 진행 중인 동안에는 노드 추가 및 IP 풀 추가 작업이 사용하지 않도록 설정됩니다. 활동 로그를 확인하려면 여기를 클릭하십시오.** 메시지가 표시되면 '시작' 작업이 완료될 때까지 기다렸다가 다음 단계를 진행하세요.
-
-1. **공용 IP 풀** 블레이드에서 **+ IP 풀 추가**를 클릭합니다. 
-1. **IP 풀 추가** 블레이드에서 다음 설정을 지정하고 **추가**를 클릭합니다.
-
-    - 이름: **공용 풀 1**
-    - 지역: **로컬**
-    - 주소 범위(CIDR 블록): **192.168.110.0/24**
-
-1. 변경 내용이 적용될 때까지 기다렸다가 **네트워크** 블레이드로 다시 이동합니다.
-1. **공용 IP 풀 사용량** 그래프를 검토하여 사용 가능한 IP 주소 수가 변경되었음을 확인합니다.
-
->**검토**: 이 연습에서는 공용 IP 주소 풀을 검토 및 구성했습니다.
+>回顾：在本练习中，你查看并配置了公共 IP 地址池。

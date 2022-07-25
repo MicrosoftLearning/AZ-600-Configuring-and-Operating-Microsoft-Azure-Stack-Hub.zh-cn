@@ -1,87 +1,92 @@
 ---
 lab:
-    title: '랩: Azure Gallery Packager를 사용하여 사용자 지정 Marketplace 항목 추가'
-    module: '모듈 2: 서비스 제공'
+  title: 实验室：通过使用 Azure Gallery Packager 添加自定义市场项”
+  module: 'Module 2: Provide Services'
+ms.openlocfilehash: 8584657e22b2c97eb92a410e4492edec0c452d03
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251651"
 ---
+# <a name="lab---add-custom-marketplace-items-by-using-the-azure-gallery-packager"></a>实验室 - 使用 Azure Gallery Packager 添加自定义市场项
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Gallery Packager를 사용하여 사용자 지정 Marketplace 항목 추가
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无 
 
-- 없음 
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+45 分钟
 
-45분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要使用 Azure Gallery Packager 工具创建自定义 Azure Stack 市场项。
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. Azure Gallery Packager 도구를 사용하여 사용자 지정 Azure Stack Marketplace 항목을 만들어야 합니다.
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 使用 Azure Gallery Packager 创建自定义 Azure Stack Hub 市场项
 
-- Azure Gallery Packager를 사용하여 사용자 지정 Azure Stack Hub Marketplace 항목 만들기
-
-## 랩 환경
+## <a name="lab-environment"></a>实验室环境
  
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-랩 환경에는 다음과 같은 구성 요소가 포함됩니다.
+实验室环境由以下部分组成：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-- 관리자:
+- 管理用户：
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-이 랩을 진행하면서 사용자 지정 Azure Stack Marketplace 항목을 만드는 데 필요한 소프트웨어를 다운로드하여 설치합니다.
+在本实验室过程中，你将下载并安装创建自定义 Azure Stack 市场项所需的软件。
 
-### 연습 1: Azure Stack Hub Marketplace 항목 사용자 지정 및 게시
+### <a name="exercise-1-customize-and-publish-azure-stack-hub-marketplace-items"></a>练习 1：自定义并发布 Azure Stack Hub 市场项
 
-이 연습에서는 Azure Gallery Packager 도구를 사용하여 Azure Marketplace 항목을 사용자 지정하고 게시합니다.
+在本练习中，你将使用 Azure Gallery Packager 工具自定义并发布 Azure 市场项。
 
-1. Azure Gallery Packager 도구 및 샘플 패키지 다운로드
-1. 기존 Azure Gallery Packager 패키지 수정
-1. Azure Stack Hub 스토리지 계정에 패키지 업로드 
-1. Azure Stack Hub Marketplace에 패키지 게시
-1. 게시한 Azure Stack Hub Marketplace 항목의 사용 가능 여부 확인
+1. 下载 Azure Gallery Packager 工具和示例包
+1. 修改现有的 Azure Gallery Packager 包
+1. 将包上传到 Azure Stack Hub 存储帐户 
+1. 将包发布到 Azure Stack Hub 市场
+1. 验证已发布的 Azure Stack Hub 市场项的可用性
 
-#### 작업 1: Azure Gallery Packager 도구 및 샘플 패키지 파일 다운로드
+#### <a name="task-1-download-the-azure-gallery-packager-tool-and-sample-packaging-files"></a>任务 1：下载 Azure Gallery Packager 工具和示例包文件
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure Gallery Packager 도구 및 샘플 패키지 파일 다운로드
+- 下载 Azure Gallery Packager 工具和示例包文件
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 웹 브라우저 창을 열고 [Azure Gallery Packager 도구 다운로드 페이지](https://aka.ms/azsmarketplaceitem)로 이동합니다. 그런 후에 **Microsoft Azure Stack Gallery Packaging Tool and Sample 3.0.zip** 보관 파일을 **Downloads** 폴더에 다운로드합니다.
-1. 다운로드가 완료되면 **C:\\Downloads** 폴더(필요한 경우 폴더를 만드세요)에 zip 파일 내의 **Packager** 폴더 압축을 풉니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，打开 Web 浏览器窗口，导航到 [Azure Gallery Packager 工具下载页面](https://aka.ms/azsmarketplaceitem)，然后将 Microsoft Azure Stack Gallery Packaging Tool 和 Sample 3.0.zip 存档文件下载到 Downloads 文件夹  。
+1. 下载完成后，将 zip 文件中的 Packager 文件夹解压缩到 C:\\Downloads 文件夹（如有需要，请创建该文件夹） 。
 
 
-#### 작업 2: 기존 Azure Gallery Packager 패키지 수정
+#### <a name="task-2-modify-an-existing-azure-gallery-packager-package"></a>任务 2：修改现有的 Azure Gallery Packager 包
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Windows Server 2019 이미지(Windows Server 2016 이미지 아님)를 사용하도록 기존 Azure Gallery Packager 패키지 수정
+- 修改现有的 Azure Gallery Packager 包，使其使用 Windows Server 2019 映像（而不是 Windows Server 2016）。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 파일 탐색기에서 **C:\\Downloads\\Packager\\Samples for Packager** 폴더로 이동하여 **C:\\Downloads** 폴더에 **Sample.SingleVMWindowsSample.1.0.0.azpkg** 패키지를 복사하고 패키지의 확장명을 **zip**으로 바꿉니다.
-1. **C:\\Downloads\\SamplePackage** 폴더(폴더를 먼저 만들어야 함)에 **Sample.SingleVMWindowsSample.1.0.0.zip** 보관 파일에 포함된 내용의 압축을 풉니다.
-1. 파일 탐색기에서 **C:\\Downloads\\SamplePackage\\DeploymentTemplates** 폴더로 이동한 다음 메모장에서 **createuidefinition.json** 파일을 엽니다.
-1. 앞에서 ASDK 인스턴스에 다운로드한 Windows Server 2019 Datacenter Core 이미지를 참조하도록 이 파일의 **imageReference** 섹션에 포함된 **sku** 매개 변수를 수정합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，通过文件资源管理器，导航到 C:\\Downloads\\Packager\\Samples for Packager 文件夹，然后将 Sample.SingleVMWindowsSample.1.0.0.azpkg 包复制到 C:\\Downloads 文件夹并将其扩展名重命名为 zip    。
+1. 将 Sample.SingleVMWindowsSample.1.0.0.zip 存档的内容解压缩到 C:\\Downloads\\SamplePackage 文件夹（需先创建该文件夹） 。
+1. 在文件资源管理器中，导航到 C:\\Downloads\\SamplePackage\\DeploymentTemplates 文件夹，然后在记事本中打开 createuidefinition.json 文件 。
+1. 修改文件的 imageReference 部分中的 sku 参数，使其引用先前下载到 ASDK 实例的 Windows Server 2019 Datacenter Core 映像 ：
 
     ```json
     "imageReference": {
@@ -91,18 +96,18 @@ lab:
     },
     ```
 
-1. 변경 내용을 저장하고 메모장을 닫습니다.
-1. 파일 탐색기에서 **C:\\Downloads\\SamplePackage\\strings** 폴더로 이동한 다음 메모장에서 **resources.resjson** 파일을 엽니다.
-1. 키-값 쌍에서 다음 값을 설정하여 **resources.resjson** 파일의 내용을 수정합니다.
+1. 保存更改并关闭记事本。
+1. 在文件资源管理器中，导航到 C:\\Downloads\\SamplePackage\\strings 文件夹，然后在记事本中打开 resources.resjson 文件 。
+1. 在键值对中设置以下值，以修改 resources.resjson 文件的内容：
 
-    - displayName: **Custom Windows Server 2019 Core VM**
-    - publisherDisplayName: **Contoso**
-    - summary: **Custom Windows Server 2019 Core VM (small disk)**
-    - longSummary: **Custom Contoso Windows Server 2019 Core VM (small disk)**
-    - description: **<p>Sample customized Windows Server 2019 Azure Stack Hub VM</p><p>Based on Azure Stack Hub Quickstart template</p>**
-    - documentationLink: **Documentation**
+    - displayName：Custom Windows Server 2019 Core VM
+    - publisherDisplayName：Contoso
+    - summary：Custom Windows Server 2019 Core VM (small disk)
+    - longSummary：Custom Contoso Windows Server 2019 Core VM (small disk)
+    - description：<p>自定义的 Windows Server 2019 Azure Stack Hub VM 示例</p><p>基于 Azure Stack Hub 快速启动模板</p>
+    - documentationLink：**文档**
 
-    >**참고**: 그러면 다음 콘텐츠가 반환됩니다.
+    >**注意**：这将生成以下内容：
 
     ```json
     {
@@ -115,19 +120,19 @@ lab:
     }
     ```
 
-1. 변경 내용을 저장하고 메모장을 닫습니다.
-1. 파일 탐색기에서 **C:\\Downloads\\SamplePackage** 폴더로 이동한 다음 메모장에서 **manifest.json** 파일을 엽니다.
-1. 키-값 쌍에서 다음 값을 설정하여 **manifest.json** 파일의 내용을 수정합니다.
+1. 保存更改并关闭记事本。
+1. 在文件资源管理器中，导航到 C:\\Downloads\\SamplePackage 文件夹，然后在记事本中打开 manifest.json 文件 。
+1. 在键值对中设置以下值，以修改 manifest.json 文件的内容：
 
-    - name: **CustomVMWindowsSample**
-    - publisher: **Contoso**
-    - version: **1.0.1**
-    - displayName: **Custom Windows Server 2019 Core VM**
-    - publisherDisplayName: **Contoso**
-    - publisherLegalName: **Contoso Inc.**
-    - uri of the documentation link: **https://docs.contoso.com**
+    - 名称：CustomVMWindowsSample
+    - publisher：Contoso
+    - version：1.0.1
+    - displayName：Custom Windows Server 2019 Core VM
+    - publisherDisplayName：Contoso
+    - publisherLegalName：Contoso Inc.
+    - 文档链接的 URI： https://docs.contoso.com
 
-    >**참고**: 그러면 다음 콘텐츠가 반환됩니다(파일의 줄 2부터 시작됨).
+    >**注意**：这应生成以下内容（从文件的第 2 行开始）：
 
     ```json
         "$schema": "https://gallery.azure.com/schemas/2015-10-01/manifest.json#",
@@ -141,98 +146,98 @@ lab:
         "longSummary": "ms-resource:longSummary",
         "description": "ms-resource:description",
         "longDescription": "ms-resource:description",
-	    "uiDefinition": {
-		"path": "UIDefinition.json"
-	},
+        "uiDefinition": {
+        "path": "UIDefinition.json"
+    },
         "links": [
             { "displayName": "ms-resource:documentationLink", "uri": "https://docs.contoso.com/" }
         ], 
     ```
 
-1. 변경 내용을 저장하고 메모장을 닫습니다.
+1. 保存更改并关闭记事本。
 
 
-#### 작업 3: 사용자 지정된 Azure Gallery Packager 패키지 생성
+#### <a name="task-3-generate-the-customized-azure-gallery-packager-package"></a>任务 3：生成自定义的 Azure Gallery Packager 包
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 새로 사용자 지정한 Azure Gallery Packager 패키지 다시 생성
+- 再生成最近自定义的 Azure Gallery Packager 包。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 **명령 프롬프트**를 시작합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，启动“命令提示符” 。
 
-1. **명령 프롬프트**에서 다음 명령을 실행하여 현재 디렉터리를 변경합니다.
+1. 从“命令提示符”运行以下命令来更改当前的目录：
 
     ```cmd
     cd C:\Downloads\Packager
     ```
 
-1. **명령 프롬프트**에서 다음 명령을 실행하여 이전 작업에서 수정한 콘텐츠를 기반으로 새 패키지를 생성합니다.
+1. 从“命令提示符”运行以下命令，根据在上一任务中修改的内容生成新的包：
 
     ```cmd
     AzureStackHubGallery.exe package -m C:\Downloads\SamplePackage\manifest.json -o C:\Downloads\
     ```
 
-1. **C:\\Downloads** 폴더에 **Contoso.CustomVMWindowsSample.1.0.1.azpkg** 패키지가 자동으로 저장되었는지 확인합니다.
+1. 验证 Contoso.CustomVMWindowsSample.1.0.1.azpkg 包是否已自动保存到 C:\\Downloads 文件夹 。
 
 
-#### 작업 4: Azure Stack Hub 스토리지 계정에 패키지 업로드
+#### <a name="task-4-upload-the-package-to-an-azure-stack-hub-storage-account"></a>任务 4：将包上传到 Azure Stack Hub 存储帐户
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure Stack Hub 스토리지 계정에 Azure Stack Hub Marketplace 항목 패키지 업로드
+- 将 Azure Stack Hub 市场项包上传到 Azure Stack Hub 存储帐户。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **+ 리소스 만들기**를 클릭합니다. 
-1. **새로 만들기** 블레이드에서 **데이터 + 스토리지**를 클릭합니다.
-1. **데이터 + 스토리지** 블레이드에서 **스토리지 계정**을 클릭합니다.
-1. **스토리지 계정 만들기** 블레이드의 **기본** 탭에서 다음 설정을 지정합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“+ 创建资源”。 
+1. 在“新建”边栏选项卡上，单击“数据 + 存储” 。
+1. 在“数据 + 存储”边栏选项卡上，单击“存储帐户” 。
+1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡中，指定以下设置 ：
 
-    - 구독: **기본 공급자 구독**
-    - 리소스 그룹: 새 리소스 그룹 **marketplace-pkgs-RG**의 이름.
-    - 이름: 소문자나 숫자 3~24자가 포함된 고유한 이름
-    - 위치: **로컬**
-    - 성능: **표준**
-    - 계정 종류: **스토리지(범용 v1)**
-    - 복제: **LRS(로컬 중복 스토리지)**
+    - 订阅：默认提供商订阅
+    - 资源组：新资源组名称 marketplace-pkgs-RG
+    - 名称：由 3 - 24 个小写字母或数字组成的唯一名称
+    - 位置：本地
+    - 性能：“标准”
+    - 帐户类型：“存储(常规用途 v1)”
+    - 复制：本地冗余存储 (LRS)
 
-1. **스토리지 계정 만들기** 블레이드의 **기본** 탭에서 **다음: 고급 >** 을 클릭합니다.
-1. **스토리지 계정 만들기** 블레이드의 **고급** 탭에서 기본 설정을 유지하고 **검토 + 만들기**를 클릭합니다.
-1. **스토리지 계정 만들기**의 **검토 + 만들기** 탭에서 **만들기**를 클릭합니다.
+1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡上，单击“下一步:   高级 &gt;”。
+1. 在“创建存储帐户”边栏选项卡的“高级”选项卡上，保留默认设置，然后单击“查看 + 创建”  。
+1. 在“创建存储帐户”边栏选项卡的“查看 + 创建”选项卡上，单击“创建”  。
 
-    >**참고**: 스토리지 계정이 프로비전될 때까지 기다립니다. 1분 정도 걸립니다.
+    >**注意**：等待存储帐户预配完成。 这大约需要一分钟。
 
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창의 허브 메뉴에서 **리소스 그룹**을 선택합니다.
-1. **리소스 그룹** 블레이드의 리소스 그룹 목록에서 **marketplace-pkgs-RG** 항목을 클릭합니다.
-1. **marketplace-pkgs-RG** 블레이드에서 새로 만든 스토리지 계정을 나타내는 항목을 클릭합니다.
-1. 스토리지 계정 블레이드에서 **컨테이너**를 클릭합니다.
-1. 컨테이너 블레이드에서 **+ 컨테이너**를 클릭합니다.
-1. **새 컨테이너** 블레이드의 **이름** 텍스트 상자에 **gallerypackages**를 입력합니다. 그런 다음 **공용 액세스 수준** 드롭다운 목록에서 **Blob(Blob에 대한 익명 읽기 전용 액세스)** 를 선택하고 **만들기**를 클릭합니다.
-1. 컨테이너 블레이드로 돌아와서 새로 만든 컨테이너를 나타내는 **gallerypackages** 항목을 클릭합니다.
-1. **gallerypackages** 블레이드에서 **업로드**를 클릭합니다.
-1. **Blob 업로드** 블레이드에서 **파일 선택** 텍스트 상자 옆의 폴더 아이콘을 클릭합니다. 
-1. **열기** 대화 상자에서 **C:\Downloads** 폴더로 이동하여 **Contoso.CustomVMWindowsSample.1.0.1.azpkg** 패키지 파일을 선택하고 **열기**를 클릭합니다.
-1. **Blob 업로드** 블레이드로 돌아와서 **업로드**를 클릭합니다.
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口的“中心”菜单中，选择“资源组”。
+1. 在“资源组”边栏选项卡的资源组列表中，单击“marketplace-pkgs-RG”条目 。
+1. 在“marketplace-pkgs-RG”边栏选项卡上，单击表示新创建的存储帐户的条目。
+1. 在“存储帐户”边栏选项卡上，单击“容器”。
+1. 在“容器”边栏选项卡上，单击“+ 容器”。
+1. 在“新建容器”边栏选项卡的“名称”文本框中，键入 gallerypackages，在“公共访问级别”下拉列表中，选择“Blob(仅对 Blob 进行匿名读取访问)”，然后单击“创建”     。
+1. 返回到“容器”边栏选项卡，单击表示新创建的容器的 gallerypackages 条目。
+1. 在“gallerypackages”边栏选项卡上，单击“上传” 。
+1. 在“上传 Blob”边栏选项卡上，单击“选择文件”文本框旁的文件夹图标 。 
+1. 在“打开”对话框中，导航到 C:\Downloads 文件夹，选择 Contoso.CustomVMWindowsSample.1.0.1.azpkg 包文件，然后单击“打开”   。
+1. 返回到“上传 Blob”边栏选项卡，单击“上传” 。
 
 
-#### 작업 5: Azure Stack Hub Marketplace에 패키지 게시
+#### <a name="task-5-publish-the-package-to-azure-stack-hub-marketplace"></a>任务 5：将包发布到 Azure Stack Hub 市场
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- Azure Stack Hub Marketplace에 패키지 게시
+- 将包发布到 Azure Stack Hub 市场。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내의 **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 이 랩에 필요한 Azure Stack Hub PowerShell 모듈을 설치합니다. 
+1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在与 AzS-HOST1 的远程桌面会话中，从“管理员:  Windows PowerShell”提示符运行以下命令，安装本实验室所需的 Azure Stack Hub PowerShell 模块： 
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Install-Module -Name Az.BootStrapper -Force -AllowPrerelease -AllowClobber
-    Install-AzProfile -Profile 2019-03-01-hybrid -Force
-    Install-Module -Name AzureStack -RequiredVersion 2.0.2-preview -AllowPrerelease
+    Install-Module -Name Az.BootStrapper -Force
+    Install-AzProfile -Profile 2020-09-01-hybrid -Force
+    Install-Module -Name AzureStack -RequiredVersion 2.2.0 
     ```
 
-    >**참고**: 이미 사용 가능한 명령 관련 오류 메시지는 무시하세요.
+    >**注意**：忽略有关已可用命令的任何错误消息。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 운영자 환경을 등록합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，注册 Azure Stack Hub 操作员环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackAdmin' -ArmEndpoint 'https://adminmanagement.local.azurestack.external' `
@@ -240,36 +245,36 @@ lab:
        -AzureKeyVaultServiceEndpointResourceId https://adminvault.local.azurestack.external
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 AzureStack\CloudAdmin 자격 증명으로 Azure Stack Hub 운영자 PowerShell 환경에 로그인합니다. Azure Stack Hub 관리자 포털이 실행 중인 기존 브라우저 세션을 활용하면 됩니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，通过与 Azure Stack Hub 管理员门户的现有浏览器会话，使用 AzureStack\CloudAdmin 凭据登录到 Azure Stack Hub 操作员 PowerShell 环境：
 
     ```powershell
     Connect-AzAccount -EnvironmentName 'AzureStackAdmin'
     ```
 
-    >**참고**: 그러면 다른 브라우저 탭이 자동으로 열리고 인증 성공 관련 알림 메시지가 표시됩니다.
+    >**注意**：这将自动打开另一个浏览器选项卡，其中显示了表示身份验证成功的消息。
 
-1. 브라우저 탭을 닫고 **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창으로 다시 전환하여 **CloudAdmin@azurestack.local**로 정상 인증되었는지 확인합니다.
-1. 관리자: **관리자: C:\Program Files\PowerShell\7\pwsh.exe**에서 다음 명령을 실행하여 Azure Stack Hub Marketplace에 패키지를 게시합니다(여기서 `<storage_account_name>`은 이전 작업에서 할당한 스토리지 계정의 이름을 나타냄).
+1. 关闭浏览器选项卡，切换回“管理员: Windows PowerShell”窗口，并验证是否已成功使用 CloudAdmin@azurestack.local 进行身份验证。
+1. 从“Administrator:管理员: Windows PowerShell”运行以下命令，将包发布到 Azure Stack Hub 市场（其中 `<storage_account_name>` 占位符表示在上一任务中分配的存储帐户的名称）：
 
     ```powershell
     Add-AzsGalleryItem -GalleryItemUri `
-    https://<스토리지 계정 이름>.blob.local.azurestack.external/gallerypackages/Contoso.CustomVMWindowsSample.1.0.1.azpkg -Verbose
+    https://<storage_account_name>.blob.local.azurestack.external/gallerypackages/Contoso.CustomVMWindowsSample.1.0.1.azpkg -Verbose
     ```
 
-1. **Add-AzsGalleryItem** 명령의 출력을 검토하여 명령이 정상적으로 완료되었는지 확인합니다.
+1. 查看 Add-AzsGalleryItem 命令的输出，以验证命令是否成功执行。
 
 
-#### 작업 6: 게시한 Azure Stack Hub Marketplace 항목의 사용 가능 여부 확인
+#### <a name="task-6-verify-availability-of-the-published-azure-stack-hub-marketplace-item"></a>任务 6：验证已发布的 Azure Stack Hub 市场项的可用性
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 게시한 Azure Stack Hub Marketplace 항목의 사용 가능 여부 확인
+- 验证已发布的 Azure Stack Hub 市场项的可用性。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 사용자 포털](https://portal.local.azurestack.external)이 표시된 웹 브라우저 창을 엽니다.
-1. Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 창에서 **Marketplace**를 클릭합니다. 
-1. **Marketplace** 블레이드에서 **컴퓨팅**을 클릭한 다음 **자세히 보기**를 클릭합니다.
-1. **Marketplace** 블레이드에서 선택 항목 목록에 **사용자 지정 Windows Server 2019 Core VM**이 표시되어 있는지 확인합니다. 
+1. 在与 AzS-HOST1 的远程桌面会话中，打开显示 [Azure Stack Hub 用户门户](https://portal.local.azurestack.external)的 Web 浏览器窗口。
+1. 在显示 Azure Stack Hub 管理员门户的 Web 浏览器窗口中，单击“市场”。 
+1. 在“市场”边栏选项卡中，单击“计算”，然后单击“查看更多”  。
+1. 在“市场”边栏选项卡上，确保选项列表中显示自定义 Windows Server 2019 Core VM 。 
 
-    >**참고**: 새 Azure Stack Hub Marketplace 항목이 정상 작동하도록 하려면 템플릿이 참조하는 OS 이미지 등 해당 항목의 배포에 필요한 모든 필수 구성 요소도 갖춰져 있는지를 확인해야 합니다. 이 랩에서는 해당 작업에 대해 다루지 않습니다.
+    >**注意**：为了确保新的 Azure Stack Hub 市场项按预期运行，你还需确保符合其布署的所有先决条件，例如其模板引用的 OS 映像。 这超出了本实验室的范围。
 
->**검토**: 이 연습에서는 Azure Gallery Packager를 사용하여 사용자 지정 Azure Stack Hub Marketplace 항목을 만든 후 **Add-AzsGalleryItem** cmdlet을 사용하여 해당 항목을 게시했습니다.
+>回顾：在本练习中，你使用 Azure Gallery Packager 创建了自定义 Azure Stack Hub 市场项，并使用 Add-AzsGalleryItem cmdlet 发布了该市场项。

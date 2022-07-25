@@ -1,120 +1,125 @@
 ---
 lab:
-    title: '랩: Azure Stack Hub 인프라 백업 구성'
-    module: '모듈 5: 인프라 관리'
+  title: 实验室：配置 Azure Stack Hub 基础结构备份
+  module: 'Module 5: Manage Infrastructure'
+ms.openlocfilehash: 801c5f02958956fe535a1a01abc77abae29b914f
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251642"
 ---
+# <a name="lab---configure-azure-stack-hub-infrastructure-backup"></a>实验室 - 配置 Azure Stack Hub 基础结构备份
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - Azure Stack Hub 인프라 백업 구성
-# 학생 랩 매뉴얼
+## <a name="lab-depedndencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要为基础结构备份做好准备。 
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. 인프라 백업을 수행할 수 있도록 환경을 준비해야 합니다. 
+## <a name="objectives"></a>目标
 
-## 목표
+完成本实验室后，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 配置 Azure Stack Hub 基础结构备份
 
-- Azure Stack Hub 인프라 백업 구성
+## <a name="lab-environment"></a>实验室环境 
 
-## 랩 환경 
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+实验室环境由以下部分组成：
 
-랩 환경에는 다음과 같은 구성 요소가 포함됩니다.
+- 在具有以下接入点的 AzSHOST-1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzSHOST-1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 你还将创建其他用户帐户。
 
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 그리고 사용자 계정을 추가로 만듭니다.
+### <a name="exercise-1-configure-azure-stack-hub-infrastructure-backup"></a>练习 1：配置 Azure Stack Hub 基础结构备份
 
-### 연습 1: Azure Stack Hub 인프라 백업 구성
+在本练习中，你将为配置 Azure Stack Hub 基础结构备份做好准备：
 
-이 연습에서는 Azure Stack Hub 인프라 백업 구성을 준비합니다.
+1. 创建备份用户
+1. 创建备份共享
+1. 生成加密密钥
+1. 配置备份控制器
 
-1. 백업 사용자 만들기
-1. 백업 공유 만들기
-1. 암호화 키 생성
-1. 백업 컨트롤러 구성
+#### <a name="task-1-create-a-backup-user"></a>任务 1：创建备份用户
 
-#### 작업 1: 백업 사용자 만들기
+在此任务中，你将：
 
-이 작업에서는 다음을 수행합니다.
+- 创建备份用户
 
-- 백업 사용자 만들기
+1. 如果需要，请使用以下凭据登录到 AzSHOST-1：
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzSHOST-1**에 로그인합니다.
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+1. 在与 AzSHOST-1 的远程桌面会话中，单击“开始”，在“开始”菜单中，单击“Windows 管理工具”，然后在管理工具列表中，双击“Active Directory 管理中心”   。
+1. 在“Active Directory 管理中心”控制台中，单击“azurestack(本地)” 。
+1. 在“详细信息”窗格中，双击“用户”容器。
+1. 在“任务”窗格的“用户”部分中，单击“新建”->“用户”  。
+1. 在“创建用户”窗口中，指定以下设置，然后单击“确定” ： 
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 **시작**을 클릭하고 시작 메뉴에서 **Windows 관리 도구**를 클릭합니다. 그런 다음 관리 도구 목록에서 **Active Directory 관리 센터**를 두 번 클릭합니다.
-1. **Active Directory 관리 센터** 콘솔에서 **azurestack(로컬)** 을 클릭합니다.
-1. 세부 정보 창에서 **사용자** 컨테이너를 두 번 클릭합니다.
-1. **작업** 창의 **사용자** 섹션에서 **새로 만들기 -> 사용자**를 클릭합니다.
-1. **사용자 만들기** 창에서 다음 설정을 지정하고 **확인**을 클릭합니다. 
+    - 全名：AzS-BackupOperator
+    - 用户 UPN 登录名：AzS-BackupOperator@azurestack.local
+    - 用户 SamAccountName：azurestack\AzS-BackupOperator
+    - 密码：Pa55w.rd
+    - 密码选项：“其他密码选项”->“密码永不过期”
 
-    - 전체 이름: **AzS-BackupOperator**
-    - 사용자 UPN 로그온: **AzS-BackupOperator@azurestack.local**
-    - 사용자 SamAccountName: **azurestack\AzS-BackupOperator**
-    - 암호: **Pa55w.rd**
-    - 암호 옵션: **기타 암호 옵션 -> 암호 사용 기간 제한 없음**
+#### <a name="task-2-create-a-backup-share"></a>任务 2：创建备份共享
 
-#### 작업 2: 백업 공유 만들기
+在此任务中，你将：
 
-이 작업에서는 다음을 수행합니다.
+- 创建备份共享。 
 
-- 백업 공유 만들기 
+    >**注意**：在非实验室场景中，此共享将位于 Azure Stack Hub 部署的外部。 为了简单起见，你将直接在 Azure Stack Hub 主机上创建它。
 
-    >**참고**: 랩 이외의 시나리오에서는 이 공유가 Azure Stack Hub 배포 외부에 배치됩니다. 그러나 여기서는 작업을 간편하게 수행하기 위해 Azure Stack Hub 호스트에 공유를 직접 만듭니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，启动文件资源管理器。 
+1. 在文件资源管理器中，创建一个新文件夹 C:\\Backup。
+1. 在文件资源管理器中，右键单击 Backup 文件夹，然后在右键单击菜单中，单击“属性” 。
+1. 在“Backup 属性”窗口中，单击“共享”选项卡，然后单击“高级共享”  。
+1. 在“高级共享”对话框中，单击“共享此文件夹”，然后单击“权限”  。
+1. 在“Backup 的权限”窗口中，确保选中“所有人”条目，然后单击“删除”  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，键入 AzS-BackupOperator，然后单击“确定”   。
+1. 确保已选中“AzS-BackupOperator”条目，然后单击“允许”列中的“完全控制”复选框  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，单击“位置”  。
+1. 在“位置”对话框中，单击代表本地计算机 (AzSHOST-1) 的条目，然后单击“确定”  。
+1. 在“输入要选择的对象名称”文本框中，键入“管理员”，然后单击“确定”  。
+1. 确保选中“管理员”条目，单击“允许”列中的“完全控制”复选框，然后单击“确定”   。
+1. 返回“高级共享”对话框，单击“确定” 。
+1. 返回“Backup 属性”窗口，单击“安全性”选项卡，然后单击“编辑”  。
+1. 单击“添加”，在“选择用户、计算机、服务帐户或组”对话框中，键入 AzS-BackupOperator，然后单击“确定”   。
+1. 在“Backup 的权限”对话框的“组或用户名称”窗格中的条目列表中，单击“AzS-BackupOperator”，在“AzS-BackupOperator 的权限”窗格中，单击“允许”列中的“完全控制”，然后单击“确定”      。 
+1. 返回“Backup 属性”窗口，单击“关闭” 。
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 파일 탐색기를 시작합니다. 
-1. 파일 탐색기에서 새 폴더 **C:\\Backup**을 만듭니다.
-1. 파일 탐색기에서 **Backup** 폴더를 마우스 오른쪽 단추로 클릭하고 오른쪽 클릭 메뉴에서 **속성**을 클릭합니다.
-1. **Backup 속성** 창에서 **공유** 탭을 클릭한 다음 **고급 공유**를 클릭합니다.
-1. **고급 공유** 대화 상자에서 **이 폴더 공유**를 클릭한 다음 **권한**을 클릭합니다.
-1. **Backup에 대한 권한** 창에서 **모든 사용자** 항목이 선택되어 있는지 확인하고 **제거**를 클릭합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에 **AzS-BackupOperator**를 입력한 후에 **확인**을 클릭합니다.
-1. **AzS-BackupOperator** 항목이 선택되어 있는지 확인하고 **허용** 열에서 **모든 권한** 체크박스를 선택합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에서 **위치**를 클릭합니다.
-1. **위치** 대화 상자에서 로컬 컴퓨터를 나타내는 항목(**AzS-HOST1**)을 클릭하고 **확인**을 클릭합니다.
-1. **선택할 개체 이름 입력** 텍스트 상자에 **Administrators**를 입력하고 **확인**을 클릭합니다.
-1. **Administrators** 항목이 선택되어 있는지 확인하고 **허용** 열에서 **모든 권한** 체크박스를 클릭한 후에 **확인**을 클릭합니다.
-1. **고급 공유** 대화 상자로 돌아와서 **확인**을 클릭합니다.
-1. **Backup 속성** 창으로 돌아와서 **보안** 탭을 클릭한 다음 **편집**을 클릭합니다.
-1. **추가**를 클릭하고 **사용자, 컴퓨터, 서비스 계정 또는 그룹 선택** 대화 상자에 **AzS-BackupOperator**를 입력한 후에 **확인**을 클릭합니다.
-1. **Backup에 대한 권한** 대화 상자의 **그룹 또는 사용자 이름** 창에 있는 항목 목록에서 **AzS-BackupOperator**를 클릭합니다. 그런 다음 **AzS-BackupOperator에 대한 권한** 창의 **허용** 열에서 **모든 권한**을 클릭하고 **확인**을 클릭합니다. 
-1. **Backup 속성** 창으로 돌아와서 **닫기**를 클릭합니다.
+#### <a name="task-3-generate-an-encryption-key"></a>任务 3：生成加密密钥
 
-#### 작업 3: 암호화 키 생성
+在此任务中，你将：
 
-이 작업에서는 다음을 수행합니다.
+- 生成加密密钥。 
 
-- 암호화 키 생성 
+    >**注意**：所有基础结构备份都必须经过加密，因此要配置基础结构备份，必须提供与加密密钥对相对应的证书。 你将使用 Windows PowerShell 生成密钥。 
 
-    >**참고**: 모든 인프라 백업은 암호화해야 합니다. 따라서 인프라 백업을 구성하려면 암호화 키 쌍에 해당하는 인증서를 제공해야 합니다. 여기서는 Windows PowerShell을 사용하여 키를 생성합니다. 
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 암호화 키 쌍과 해당 인증서를 생성합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，生成加密密钥对和相对应的证书：
     
     ```powershell
     $cert = New-SelfSignedCertificate `
@@ -128,33 +133,34 @@ lab:
         -FilePath C:\CertStore\AzSHIBPK.cer 
     ```
 
-    >**참고**: Azure Stack Hub에서는 인프라 백업용으로 자체 서명 인증서를 사용할 수 있습니다. 복구 중에 프라이빗 키를 제공해야 하므로 프로덕션 환경에서는 안전한 위치에 프로덕션 키를 저장해 두어야 합니다.
+    >**注意**：Azure Stack Hub 支持自签名证书，以用于基础结构备份。 请记住，在恢复过程中需要提供私钥，因此在生产环境中，请确保将其存储在安全的位置。
 
 
-#### 작업 4: 백업 컨트롤러 구성
+#### <a name="task-4-configure-backup-controller"></a>任务 4：配置备份控制器
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- 백업 컨트롤러 구성
+- 配置备份控制器
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 [Azure Stack Hub 관리자 포털](https://adminportal.local.azurestack.external/)이 표시된 웹 브라우저 창을 열고 CloudAdmin@azurestack.local로 로그인합니다.
-1. Azure Stack Hub 관리자 포털에서 **모든 서비스**를 클릭합니다.
-1. **모든 서비스** 블레이드에서 **관리**를 선택하고 **인프라 백업**을 선택합니다. 
-1. **인프라 백업** 블레이드에서 **구성**을 클릭합니다.
-1. **백업 컨트롤러 설정** 블레이드에서 다음 설정을 지정하고 **확인**을 클릭합니다.
+1. 在与 AzSHOST-1 的远程桌面会话中，打开显示 [Azure Stack Hub 管理员门户](https://adminportal.local.azurestack.external/)的 Web 浏览器窗口，并使用 CloudAdmin@azurestack.local 登录。
+1. 在 Azure Stack Hub 管理员门户中，单击“所有服务”。
+1. 在“所有服务”边栏选项卡上，选择“管理”，然后选择“基础结构备份”  。 
+1. 在“基础结构备份”边栏选项卡上，单击“配置”。
+1. 在“备份控制器设置”边栏选项卡上的“加密设置”部分中，选择“Certificate .cer 文件”文本框旁的文件夹图标，在“打开”对话框中，导航到 C:\\CertStore 文件夹，选择 AzSHIBPK.cer 文件，然后选择“打开”      。
+1. 返回到“备份控制器设置”边栏选项卡，在“备份存储设置”部分选择“外部文件共享”选项  。
+1. 在“备份控制器设置”边栏选项卡上，指定以下设置，然后单击“确定” ：
 
-    - 백업 스토리지 위치: **\\AzS-HOST1.azurestack.local\Backup**
-    - 사용자 이름: **AzS-BackupOperator@azurestack.local**
-    - 암호: **Pa55w.rd**
-    - 암호 확인: **Pa55w.rd**
-    - 백업 빈도(시간): **12**
-    - 보존 기간(일): **7**
-    - 인증서 .cer 파일: **C:\CertStore\AzSHIBPK.cer**
+    - 备份存储位置：\\AzSHOST-1.azurestack.local\Backup
+    - 用户名： **AzS-BackupOperator@azurestack.local**
+    - 密码：Pa55w.rd
+    - 确认密码：Pa55w.rd
+    - 备份频率(小时)：**12**
+    - 保留期(天)：**7**
 
-1. 인프라 백업이 사용하도록 설정되었는지 확인하려면 Azure Stack Hub 관리자 포털이 표시된 웹 브라우저 페이지를 새로 고치고 **인프라 백업** 블레이드로 다시 이동합니다.
-1. **인프라 백업** 블레이드에서 백업 설정을 검토합니다.
-1. 필요한 경우 **지금 백업**을 클릭하여 주문형 백업을 시작합니다.
+1. 若要验证是否已启用基础结构备份，请刷新显示 Azure Stack Hub 管理员门户的 Web 浏览器页面，然后导航回“基础结构备份”边栏选项卡。
+1. 在“基础结构备份”边栏选项卡上，查看备份设置。
+1. （可选）单击“立即备份”以启动按需备份。
 
-    >**참고**: 백업 프로세스는 완료하려면 15분 이상 걸리며 일시 중지하거나 중지할 수 없습니다.
+    >**注意**：备份过程无法暂停或停止，并且需要超过 15 分钟的时间才能完成。
 
->**검토**: 이 연습에서는 Azure Stack Hub 인프라 백업을 호스트할 공유, 그리고 Azure Stack Hub 인프라 백업에서 해당 공유에 연결하는 데 사용할 Active Directory 사용자 계정을 만들었습니다. 또한 암호화 키를 생성하고 백업 컨트롤러를 구성했습니다. 
+>回顾：在本练习中，你创建了一个将用于托管 Azure Stack Hub 基础结构备份的共享，以及一个 Active Directory 用户帐户，Azure Stack Hub 基础结构备份将使用该帐户连接到该共享、生成的加密密钥和已配置的备份控制器。 

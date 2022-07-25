@@ -1,82 +1,87 @@
 ---
 lab:
-    title: '랩: PowerShell을 통해 Azure Stack Hub에 연결'
-    module: '모듈 5: 인프라 관리'
+  title: 实验室：通过 PowerShell 连接到 Azure Stack Hub
+  module: 'Module 5: Manage Infrastructure'
+ms.openlocfilehash: d9689065c608593a8c298639598b2a6a66627d44
+ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
+ms.translationtype: HT
+ms.contentlocale: zh-CN
+ms.lasthandoff: 03/01/2022
+ms.locfileid: "139251648"
 ---
+# <a name="lab---connect-to-azure-stack-hub-via-powershell"></a>实验室 - 通过 PowerShell 连接到 Azure Stack Hub
+# <a name="student-lab-manual"></a>学生实验室手册
 
-# 랩 - PowerShell을 통해 Azure Stack Hub에 연결
-# 학생 랩 매뉴얼
+## <a name="lab-dependencies"></a>实验室依赖项
 
-## 랩 종속성
+- 无
 
-- 없음
+## <a name="estimated-time"></a>预计用时
 
-## 예상 소요 시간
+30 分钟
 
-30분
+## <a name="lab-scenario"></a>实验室方案
 
-## 랩 시나리오
+你是 Azure Stack Hub 环境的操作员。 你需要能够使用 PowerShell 管理环境。 你还需能够偶尔以用户身份通过 PowerShell 连接到 Azure Stack Hub。 
 
-여러분은 Azure Stack Hub 환경의 운영자입니다. PowerShell을 사용하여 환경을 관리할 수 있어야 합니다. 그리고 경우에 따라서는 사용자로 PowerShell을 통해 Azure Stack Hub에 연결할 수 있어야 합니다. 
+## <a name="objectives"></a>目标
 
-## 목표
+在本实验室中，你将能够：
 
-이 랩을 완료하면 다음을 수행할 수 있습니다.
+- 通过 PowerShell 连接到 ASDK 操作员和用户环境
 
-- PowerShell을 통해 ASDK 운영자 및 사용자 환경에 연결
+## <a name="lab-environment"></a>实验室环境
 
-## 랩 환경
+本实验室使用与 Active Directory 联合身份验证服务 (AD FS) 集成的 ADSK 实例（将 Active Directory 备份为标识提供者）。 
 
-이 랩에서는 AD FS(Active Directory Federation Services)와 통합된 ASDK 인스턴스(ID 공급자로 백업된 Active Directory)를 사용합니다. 
+>**注意**：有关连接到与 Azure Active Directory (Azure AD) 集成的 Azure Stack Hub 的信息，请参阅[使用 PowerShell 连接到 Azure Stack Hub](https://docs.microsoft.com/en-us/azure-stack/operator/azure-stack-powershell-configure-admin?view=azs-2008&tabs=az1%2Caz2%2Caz3#connect-with-azure-ad)。
 
->**참고**: Azure Active Directory(Azure AD)와 통합된 Azure Stack Hub에 연결하는 방법 관련 세부 정보는 [PowerShell을 사용하여 Azure Stack Hub에 연결](https://docs.microsoft.com/ko-kr/azure-stack/operator/azure-stack-powershell-configure-admin?view=azs-2008&tabs=az1%2Caz2%2Caz3#connect-with-azure-ad)을 참조하세요.
+实验室环境具有以下配置：
 
-랩 환경의 구성은 다음과 같습니다.
+- 在具有以下接入点的 AzS-HOST1 服务器上运行的 ASDK 部署：
 
-- 다음 액세스 지점을 사용하여 **AzS-HOST1** 서버에서 실행되는 ASDK 배포:
+  - 管理员门户： https://adminportal.local.azurestack.external
+  - 管理员 ARM 终结点： https://adminmanagement.local.azurestack.external
+  - 用户门户： https://portal.local.azurestack.external
+  - 用户 ARM 终结点： https://management.local.azurestack.external
 
-  - 관리자 포털: https://adminportal.local.azurestack.external
-  - 관리자 ARM 엔드포인트: https://adminmanagement.local.azurestack.external
-  - 사용자 포털: https://portal.local.azurestack.external
-  - 사용자 ARM 엔드포인트: https://management.local.azurestack.external
+- 管理用户：
 
-- 관리자:
+  - ASDK 云操作员用户名：CloudAdmin@azurestack.local
+  - ASDK 云操作员密码：Pa55w.rd1234
+  - ASDK 主机管理员用户名：AzureStackAdmin@azurestack.local
+  - ASDK 主机管理员密码：Pa55w.rd1234
 
-  - ASDK 클라우드 운영자 사용자 이름: **CloudAdmin@azurestack.local**
-  - ASDK 클라우드 운영자 암호: **Pa55w.rd1234**
-  - ASDK 호스트 관리자 사용자 이름: **AzureStackAdmin@azurestack.local**
-  - ASDK 호스트 관리자 암호: **Pa55w.rd1234**
+在本实验室课程中，你将安装通过 PowerShell 管理 Azure Stack Hub 所需的软件。 
 
-이 랩을 진행하면서 PowerShell을 통해 Azure Stack Hub를 관리하는 데 필요한 소프트웨어를 설치합니다. 
+## <a name="instructions"></a>Instructions
 
-## 지침
+### <a name="exercise-1-connecting-to-asdk-via-azure-powershell"></a>练习 1：通过 Azure PowerShell 连接到 ASDK
 
-### 연습 1: Azure PowerShell을 통해 ASDK에 연결
+在本练习中，你将通过 PowerShell 从 ASDK 主机连接到 ASDK 的 Admin ARM 终结点：
 
-이 연습에서는 PowerShell을 통해 ASDK에서 ASDK의 관리자 ARM 엔드포인트에 연결합니다.
+1. 安装与 Azure Stack Hub 兼容的 Az PowerShell 模块
+1. 下载 Azure Stack Hub 工具。
+1. 通过 PowerShell 配置并连接到 Azure Stack Hub 操作员环境
+1. 通过 PowerShell 配置并连接到 Azure Stack Hub 用户环境
 
-1. Azure Stack Hub 호환 Az PowerShell 모듈 설치
-1. Azure Stack Hub 도구 다운로드
-1. PowerShell을 통해 Azure Stack Hub 운영자 환경 구성 및 해당 환경에 연결
-1. PowerShell을 통해 Azure Stack Hub 사용자 환경 구성 및 해당 환경에 연결
+#### <a name="task-1-install-azure-stack-hub-compatible-azure-powershell-modules"></a>任务 1：安装与 Azure Stack Hub 兼容的 Azure PowerShell 模块
 
-#### 작업 1: Azure Stack Hub 호환 Azure PowerShell 모듈 설치
+在此任务中，你将：
 
-이 작업에서는 다음을 수행합니다.
+- 删除所有的现有 Azure 和 Az PowerShell 模块。
+- 安装与 Azure Stack Hub 兼容的 Az PowerShell 模块并为其配置先决条件。
+- 安装与 Azure Stack Hub 兼容的 Az PowerShell 模块。
 
-- 기존 Azure 및 Az PowerShell 모듈 제거
-- Azure Stack Hub 호환 Az PowerShell 모듈용 필수 구성 요소 설치 및 구성
-- Azure Stack Hub 호환 Az PowerShell 모듈 설치
+>**注意**：Azure 资源管理器 (AzureRM) PowerShell 模块的所有版本均已过时，但并没有停止提供支持。 不过，在与 Azure 和 Azure Stack Hub 交互时，建议使用的 PowerShell 模块是 Az PowerShell 模块。 
 
->**참고**: 모든 버전의 AzureRM(Azure Resource Manager) PowerShell 모듈은 최신 버전은 아니지만 계속 지원됩니다. 그러나 이제는 Azure 및 Azure Stack Hub와 상호 작용할 때 PowerShell 모듈로 Az PowerShell 모듈을 사용하는 것이 좋습니다. 
+1. 如果需要，请使用以下凭据登录到 AzS-HOST1：
 
-1. 필요한 경우 다음 자격 증명을 사용하여 **AzS-HOST1**에 로그인합니다.
+    - 用户名： **AzureStackAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-    - 사용자 이름: **AzureStackAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 **Windows PowerShell**을 시작합니다.
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 Azure PowerShell 및 Az PowerShell 모듈의 기존 버전을 모두 제거합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell 。
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以删除所有现有版本的 Azure PowerShell 和 Az PowerShell 模块：
 
     ```powershell
     Get-Module -Name Azure* -ListAvailable | Uninstall-Module -Force -Verbose -ErrorAction Continue
@@ -84,54 +89,51 @@ lab:
     Get-Module -Name Az.* -ListAvailable | Uninstall-Module -Force -Verbose -ErrorAction Continue
     ```
 
-    >**참고**: 사용 중인 모듈 관련 오류 메시지가 표시되면 Windows PowerShell 세션을 닫았다가 다시 연 후 위의 명령을 다시 실행합니다.
+    >**注意**：如果收到有关正在使用的模块的错误消息，请关闭 Windows PowerShell 会话再重新打开，然后重新运行上述命令。
 
-1. **관리자: Windows PowerShell** 프롬프트에서 다음 명령을 실행하여 **C:\\Program Files\\WindowsPowerShell\\Modules** 및 **C:\\Users\\AzureStackAdmin\\Documents\\PowerShell\\Modules\\** 폴더에서 이름이 **Azure**, **Az** 또는 **Azs**로 시작되는 폴더를 모두 삭제합니다.
+1. 在“管理员: **Windows PowerShell”提示符运行以下命令，从 C:\\Program Files\\WindowsPowerShell\\Modules 和 C:\\Users\\AzureStackAdmin\\Documents\\PowerShell\\Modules\\ 文件夹中删除所有以 Azure、Az 或 Azs 开头的文件夹**     。
 
     ```powershell
     Get-ChildItem -Path 'C:\Program Files\WindowsPowerShell\Modules' -Include 'Az*' -Recurse -Force | Remove-Item -Force -Recurse
     Get-ChildItem -Path 'C:\Users\AzureStackAdmin\Documents\PowerShell\Modules' -Include 'Az*' -Recurse -Force | Remove-Item -Force -Recurse
     ```
 
-    >**참고**: 사용 중인 모듈 관련 오류 메시지가 표시되면 Windows PowerShell 세션을 닫았다가 다시 연 후 위의 명령을 다시 실행합니다.
+    >**注意**：如果收到有关正在使用的模块的错误消息，请关闭 Windows PowerShell 会话再重新打开，然后重新运行上述命令。
 
-
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 Microsoft Edge를 시작하여 [PowerShell 릴리스 페이지](https://github.com/PowerShell/PowerShell/releases/tag/v7.1.2)로 이동합니다. 
-1. [PowerShell 릴리스 페이지](https://github.com/PowerShell/PowerShell/releases/tag/v7.1.2)에서 최신 PowerShell 릴리스를 다운로드하여 설치합니다. 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 관리자로 PowerShell 7을 시작합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 신뢰할 수 있는 리포지토리로 PowerShell 갤러리를 구성합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，将 PowerShell 库配置为受信任的存储库
 
     ```powershell
     Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 PowerShellGet을 설치합니다.
-
-    ```powershell
-    Install-Module PowerShellGet -MinimumVersion 2.2.3 -Force
-    ```
-
-    >**참고**: 사용 중인 모듈 관련 경고 메시지는 무시하세요.
-
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub용 PowerShell Az 모듈을 설치합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以安装 PowerShellGet：
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Install-Module -Name Az.BootStrapper -Force -AllowPrerelease -AllowClobber
-    Install-AzProfile -Profile 2019-03-01-hybrid -Force
-    Install-Module -Name AzureStack -RequiredVersion 2.0.2-preview -AllowPrerelease
+    Install-Module PowerShellGet -MinimumVersion 2.2.3 -Force
     ```
 
-    >**참고**: 이미 사용 가능한 명령 관련 오류 메시지는 무시하세요.
+    >**注意**：忽略有关正在使用的模块的任何警告消息。
+
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，为 Azure Stack Hub 安装 PowerShell Az 模块：
+
+    ```powershell
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Install-Module -Name Az.BootStrapper -Force
+    Install-AzProfile -Profile 2020-09-01-hybrid -Force
+    Install-Module -Name AzureStack -RequiredVersion 2.2.0
+    ```
+
+    >**注意**：忽略有关已可用命令的任何错误消息。
 
 
-#### 작업 2: Azure Stack Hub 도구 다운로드 
+#### <a name="task-2-download-azure-stack-hub-tools"></a>任务 2：下载 Azure Stack Hub 工具 
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- GitHub에서 Azure Stack Hub 도구 다운로드
+- 从 GitHub 下载 Azure Stack Hub 工具
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에서 다음 명령을 실행하여 Azure Stack Tools를 다운로드합니다.
+1. 在“管理员: Windows PowerShell”窗口运行以下命令，以下载 Azure Stack Tools：
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -141,18 +143,18 @@ lab:
     Set-Location -Path '\AzureStack-Tools-az'
     ```
 
-    >**참고**: 이 단계에서는 Azure Stack Hub 도구를 호스트하는 GitHub 리포지토리가 포함된 보관 파일을 로컬 컴퓨터에 복사한 다음 **C:\\AzureStack-Tools-master** 폴더로 확장합니다. 이 도구에는 폭넓은 기능을 제공하는 PowerShell 모듈이 포함되어 있습니다. 제공되는 기능으로는 Azure Stack Hub 기능 확인, Azure Stack Hub VM 인프라와 이미지 관리, Resource Manager 정책 구성, Azure에 Azure Stack Hub 등록, Azure Stack Hub 배포, Azure Stack Hub에 연결, Azure Stack Hub 테넌트 관리, Azure Stack Hub Resource Manager 템플릿 유효성 검사 등이 있습니다. 
+    >**注意**：此步骤将包含托管 Azure Stack Hub 工具的 GitHub 存储库的存档复制到本地计算机，并将存档扩展到 C:\\AzureStack-Tools-master 文件夹。 这些工具包含 PowerShell 模块，这些模块提供了一系列功能，包括识别 Azure Stack Hub 功能、管理 Azure Stack Hub VM 基础结构和映像、配置资源管理器策略、向 Azure 注册 Azure Stack Hub、Azure Stack Hub 部署、与 Azure Stack Hub 建立连接、Azure Stack Hub 租户管理以及验证 Azure Stack Hub 资源管理器模板。 
 
 
-#### 작업 3: PowerShell을 통해 Azure Stack Hub 운영자 환경 구성 및 해당 환경에 연결
+#### <a name="task-3-configure-and-connect-to-the-azure-stack-hub-operator-environment-via-powershell"></a>任务 3：通过 PowerShell 配置并连接到 Azure Stack Hub 操作员环境
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- PowerShell을 통해 Azure Stack Hub 운영자 환경 구성
-- PowerShell을 통해 Azure Stack Hub 운영자 환경에 연결
-- PowerShell을 통해 Azure Stack Hub 운영자 환경에 대한 연결 유효성 검사
+- 通过 PowerShell 配置 Azure Stack Hub 操作员环境
+- 通过 PowerShell 连接到 Azure Stack Hub 操作员环境
+- 通过 PowerShell 验证与 Azure Stack Hub 操作员环境的连接
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 운영자 PowerShell 환경을 등록합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，注册 Azure Stack Hub 操作员 PowerShell 环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackAdmin' -ArmEndpoint 'https://adminmanagement.local.azurestack.external' `
@@ -160,7 +162,7 @@ lab:
        -AzureKeyVaultServiceEndpointResourceId https://adminvault.local.azurestack.external
     ```
 
-    >**참고**: 위의 명령은 다음 출력을 반환합니다.
+    >**注意**：验证命令是否返回以下输出：
 
     ```powershell
     Name            Resource Manager Url                              ActiveDirectory Authority
@@ -168,51 +170,53 @@ lab:
     AzureStackAdmin https://adminmanagement.local.azurestack.external https://adfs.local.azurestack.external/adfs/
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 AzureStack\CloudAdmin 자격 증명을 사용해 Azure Stack Hub 운영자 PowerShell 환경에 로그인합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以使用 AzureStack\CloudAdmin 凭据登录到 Azure Stack Hub 操作员 PowerShell 环境：
 
     ```powershell
     Connect-AzAccount -EnvironmentName 'AzureStackAdmin' -UseDeviceAuthentication
     ```
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창에 표시되는 메시지를 검토합니다. 그런 후에 웹 브라우저 창을 열고 [adfs.local.azurestack.external](https://adfs.local.azurestack.external/adfs/oauth2/deviceauth) 페이지로 이동하여 검토한 메시지에 포함된 코드를 입력하고 **계속**을 클릭합니다. 
+    >**注意**：如果出现提示，请打开一个新的浏览器选项卡，导航到 https://adfs.local.azurestack.external/adfs/oauth2/deviceauth 页面并输入提示消息中包含的代码来登录。
 
-1. 메시지가 표시되면 다음 자격 증명을 사용하여 로그인합니다.
+1. 在“管理员:Windows PowerShell”窗口中，查看生成的消息，打开 Web 浏览器窗口，导航到 [adfs.local.azurestack.external](https://adfs.local.azurestack.external/adfs/oauth2/deviceauth) 页面，键入已查看的消息中包含的代码，然后单击“继续”。 
 
-    - 사용자 이름: **CloudAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+1. 如果出现提示，请使用以下凭据登录：
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 창으로 다시 전환하여 **CloudAdmin@azurestack.local**로 정상 인증되었는지 확인합니다.
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 관리자 구독 목록을 표시합니다.
+    - 用户名： **CloudAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
+
+1. 切换回“管理员: Windows PowerShell”窗口，并验证是否已成功使用 CloudAdmin@azurestack.local 进行身份验证。
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以列出 Azure Stack Hub 管理员订阅
 
     ```powershell
     Get-AzSubscription
     ```
 
-    >**참고**: 출력에 **기본 공급자 구독**, **계량 구독** 및 **사용 구독**이 포함되어 있음을 확인합니다.
+    >**注意**：确认输出包括“默认提供商订阅”。
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 해당 PowerShell 환경 컨텍스트를 확인합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以验证相应的 PowerShell 环境上下文：
 
     ```powershell
     Get-AzContext
     ```
 
 
-#### 작업 4: PowerShell을 통해 Azure Stack Hub 사용자 환경 구성 및 해당 환경에 연결
+#### <a name="task-4-configure-and-connect-to-the-azure-stack-hub-user-environment-via-powershell"></a>任务 4：通过 PowerShell 配置并连接到 Azure Stack Hub 用户环境
 
-이 작업에서는 다음을 수행합니다.
+在此任务中，你将：
 
-- PowerShell을 통해 Azure Stack Hub 사용자 환경 구성
-- PowerShell을 통해 Azure Stack Hub 사용자 환경에 연결
-- PowerShell을 통해 Azure Stack Hub 운영자 사용에 대한 연결 유효성 검사
+- 通过 PowerShell 配置 Azure Stack Hub 用户环境
+- 通过 PowerShell 连接到 Azure Stack Hub 用户环境
+- 通过 PowerShell 验证与 Azure Stack Hub 用户环境的连接
 
-1. **AzS-HOST1**에 연결된 원격 데스크톱 세션 내에서 PowerShell 7을 시작합니다.
-1. **C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 사용자 환경을 대상으로 Azure Resource Manager 환경을 등록합니다.
+1. 在与 AzS-HOST1 的远程桌面会话中，启动 Windows PowerShell。
+1. 从“Windows PowerShell”提示符运行以下命令，以注册面向 Azure Stack Hub 用户环境的 Azure 资源管理器环境：
 
     ```powershell
     Add-AzEnvironment -Name 'AzureStackUser' -ArmEndpoint 'https://management.local.azurestack.external'
     ```
 
-    >**참고**: 위의 명령은 다음 출력을 반환합니다.
+    >**注意**：验证命令是否返回以下输出：
 
     ```powershell
     Name            Resource Manager Url                              ActiveDirectory Authority
@@ -220,25 +224,25 @@ lab:
     AzureStackUser https://management.local.azurestack.external https://adfs.local.azurestack.external/adfs/
     ```
 
-1. **C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub PowerShell 환경ㄹ에 로그인합니다.
+1. 从“Windows PowerShell”提示符运行以下命令以登录到 Azure Stack Hub PowerShell 环境。
 
     ```powershell
     Connect-AzAccount -EnvironmentName 'AzureStackUser'
     ```
 
-    >**참고**: 그러면 웹 브라우저 창이 자동으로 열리고 인증하라는 메시지가 표시됩니다.
+    >**注意**：这将自动打开 Web 浏览器窗口，提示你进行身份验证。
 
-1. 메시지가 표시되면 다음 자격 증명을 사용하여 로그인합니다.
+1. 出现提示时，请使用以下凭据登录：
 
-    - 사용자 이름: **CloudAdmin@azurestack.local**
-    - 암호: **Pa55w.rd1234**
+    - 用户名： **CloudAdmin@azurestack.local**
+    - 密码：Pa55w.rd1234
 
-1. **관리자: C:\Program Files\PowerShell\7\pwsh.exe** 프롬프트에서 다음 명령을 실행하여 Azure Stack Hub 관리자 구독 목록을 표시합니다.
+1. 在“管理员: Windows PowerShell”提示符运行以下命令，以列出 Azure Stack Hub 管理员订阅
 
     ```powershell
     Get-AzSubscription
     ```
 
-    >**참고**: 출력에 **기본 공급자 구독**, **계량 구독** 및 **사용 구독**이 포함되어 있지 않음을 확인합니다.
+    >**注意**：确认输出不包括“默认提供商订阅” 。
 
->**검토**: 이 연습에서는 PowerShell을 통해 Azure Stack Hub 운영자 및 사용자 환경에 연결했습니다.
+>回顾：在本练习中，你通过 PowerShell 连接了 Azure Stack Hub 操作员环境和用户环境。
