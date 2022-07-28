@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中委托套餐管理
   module: 'Module 4: Manage Identity and Access'
-ms.openlocfilehash: dfef9f9c813af4198db8d75be5a2301bde92e437
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251639"
 ---
+
 # <a name="lab---delegate-offer-management-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中委托套餐管理
 # <a name="student-lab-manual"></a>学生实验室手册
 

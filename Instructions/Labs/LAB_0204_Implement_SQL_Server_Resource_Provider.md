@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中实现 SQL Server 资源提供程序
   module: 'Module 2: Provide Services'
-ms.openlocfilehash: 76aa2946e5adb7bc82368595813707e49c85088a
-ms.sourcegitcommit: f99a365741ad02181da3b4fc4a921d5437810bc2
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/02/2022
-ms.locfileid: "139252339"
 ---
+
 # <a name="lab---implement-sql-server-resource-provider-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中实现 SQL Server 资源提供程序
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -308,7 +303,7 @@ ms.locfileid: "139252339"
 
 1. 在“创建虚拟机”边栏选项卡的“SQL Server 设置”窗格上，指定以下设置并单击“确定”（其他设置保留默认值）：
 
-    - SQL 连接：公共 (Internet)
+    - SQL 连接：公共(互联网)
     - 端口：1433
     - SQL 身份验证：启用
     - 登录名：SQLAdmin

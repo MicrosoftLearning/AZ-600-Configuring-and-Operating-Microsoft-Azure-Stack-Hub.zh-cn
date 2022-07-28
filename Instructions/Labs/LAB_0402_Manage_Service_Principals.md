@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中管理服务主体
   module: 'Module 4: Manage Identity and Access'
-ms.openlocfilehash: 771acee127d4c1ed07873c436cf5516343eaf98c
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251660"
 ---
+
 # <a name="lab---manage-service-principals-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理服务主体
 # <a name="student-lab-manual"></a>学生实验室手册
 

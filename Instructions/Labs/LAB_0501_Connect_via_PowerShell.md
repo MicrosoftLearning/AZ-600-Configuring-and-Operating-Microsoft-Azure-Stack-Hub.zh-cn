@@ -2,13 +2,8 @@
 lab:
   title: 实验室：通过 PowerShell 连接到 Azure Stack Hub
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: d9689065c608593a8c298639598b2a6a66627d44
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251648"
 ---
+
 # <a name="lab---connect-to-azure-stack-hub-via-powershell"></a>实验室 - 通过 PowerShell 连接到 Azure Stack Hub
 # <a name="student-lab-manual"></a>学生实验室手册
 
