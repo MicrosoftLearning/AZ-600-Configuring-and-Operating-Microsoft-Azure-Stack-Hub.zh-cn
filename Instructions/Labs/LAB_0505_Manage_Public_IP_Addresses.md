@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中管理公共 IP 地址
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: fd9c6f35024c4753fe27d86cef8fd47dd48764f3
-ms.sourcegitcommit: fd0b6231a00e8c86b46d914b2b6c4d984bc19902
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/02/2022
-ms.locfileid: "139256867"
 ---
+
 # <a name="lab---manage-public-ip-addresses-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理公共 IP 地址
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -97,7 +92,7 @@ ms.locfileid: "139256867"
     - 名称：Network-plan1-quota
     - 虚拟网络：**2**
     - 虚拟网络网关：**2**
-    - 虚拟网络连接：**2**
+    - 网络连接数：**2**
     - 公共 IP：20
     - NIC：20
     - 负载均衡器：5

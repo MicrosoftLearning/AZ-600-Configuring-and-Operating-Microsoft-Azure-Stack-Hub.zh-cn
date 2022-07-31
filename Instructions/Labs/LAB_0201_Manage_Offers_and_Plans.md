@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中管理套餐和计划
   module: 'Module 2: Provide Services'
-ms.openlocfilehash: e60fe7abb5f14addf1b172b16d9edf9f578f55cb
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251636"
 ---
+
 # <a name="lab---manage-offers-and-plans-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中管理套餐和计划
 # <a name="student-lab-manual"></a>学生实验室手册
 

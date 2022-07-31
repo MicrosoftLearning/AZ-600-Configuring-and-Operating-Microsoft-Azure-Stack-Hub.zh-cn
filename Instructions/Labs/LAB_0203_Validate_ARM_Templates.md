@@ -2,13 +2,8 @@
 lab:
   title: 实验室：使用 Azure Stack Hub 验证 Azure 资源管理器 (ARM) 模板
   module: 'Module 2: Provide Services'
-ms.openlocfilehash: ac5c390449e293632dba9858773d5a50f98fb23c
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251645"
 ---
+
 # <a name="lab---validate-azure-resource-manager-arm-templates-with-azure-stack-hub"></a>实验室 - 使用 Azure Stack Hub 验证 Azure 资源管理器 (ARM) 模板
 # <a name="student-lab-manual"></a>学生实验室手册
 

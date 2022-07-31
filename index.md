@@ -2,13 +2,8 @@
 title: 联机托管说明
 permalink: index.html
 layout: home
-ms.openlocfilehash: f4e2e1489e1997cfd064aa74eb5345e302bb2424
-ms.sourcegitcommit: 4949ab968553abc20d2d72d6fd30a33ffae0317a
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 01/13/2022
-ms.locfileid: "137893085"
 ---
+
 # <a name="content-directory"></a>内容目录
 
 下面列出了每个实验室练习和演示的超链接。

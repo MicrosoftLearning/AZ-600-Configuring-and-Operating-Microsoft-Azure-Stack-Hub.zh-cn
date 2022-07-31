@@ -2,13 +2,8 @@
 lab:
   title: 实验室：配置 Azure Stack Hub 基础结构备份
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: 801c5f02958956fe535a1a01abc77abae29b914f
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251642"
 ---
+
 # <a name="lab---configure-azure-stack-hub-infrastructure-backup"></a>实验室 - 配置 Azure Stack Hub 基础结构备份
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -147,7 +142,6 @@ ms.locfileid: "139251642"
 1. 在“所有服务”边栏选项卡上，选择“管理”，然后选择“基础结构备份”  。 
 1. 在“基础结构备份”边栏选项卡上，单击“配置”。
 1. 在“备份控制器设置”边栏选项卡上的“加密设置”部分中，选择“Certificate .cer 文件”文本框旁的文件夹图标，在“打开”对话框中，导航到 C:\\CertStore 文件夹，选择 AzSHIBPK.cer 文件，然后选择“打开”      。
-1. 返回到“备份控制器设置”边栏选项卡，在“备份存储设置”部分选择“外部文件共享”选项  。
 1. 在“备份控制器设置”边栏选项卡上，指定以下设置，然后单击“确定” ：
 
     - 备份存储位置：\\AzSHOST-1.azurestack.local\Backup

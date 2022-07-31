@@ -2,13 +2,8 @@
 lab:
   title: 实验室：通过使用 Azure Gallery Packager 添加自定义市场项”
   module: 'Module 2: Provide Services'
-ms.openlocfilehash: 8584657e22b2c97eb92a410e4492edec0c452d03
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251651"
 ---
+
 # <a name="lab---add-custom-marketplace-items-by-using-the-azure-gallery-packager"></a>实验室 - 使用 Azure Gallery Packager 添加自定义市场项
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -200,7 +195,7 @@ ms.locfileid: "139251651"
     - 帐户类型：“存储(常规用途 v1)”
     - 复制：本地冗余存储 (LRS)
 
-1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡上，单击“下一步:   高级 &gt;”。
+1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡上，单击“下一步:  高级 &gt;”。
 1. 在“创建存储帐户”边栏选项卡的“高级”选项卡上，保留默认设置，然后单击“查看 + 创建”  。
 1. 在“创建存储帐户”边栏选项卡的“查看 + 创建”选项卡上，单击“创建”  。
 
@@ -226,7 +221,7 @@ ms.locfileid: "139251651"
 - 将包发布到 Azure Stack Hub 市场。
 
 1. 在与 AzS-HOST1 的远程桌面会话中，以管理员身份启动 Windows PowerShell。
-1. 在与 AzS-HOST1 的远程桌面会话中，从“管理员:  Windows PowerShell”提示符运行以下命令，安装本实验室所需的 Azure Stack Hub PowerShell 模块： 
+1. 在与 AzS-HOST1 的远程桌面会话中，从“Administrator:  Windows PowerShell”提示符运行以下命令，安装本实验室所需的 Azure Stack Hub PowerShell 模块： 
 
     ```powershell
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

@@ -2,13 +2,8 @@
 lab:
   title: 实验室：在 Azure Stack Hub 中访问特权终结点
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: c3b2248f0d6b160ac4356875f135d374ff51fff9
-ms.sourcegitcommit: 3ce6441f824c1ac2b22159d6830eba55dba5ba66
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/01/2022
-ms.locfileid: "139251633"
 ---
+
 # <a name="lab---access-the-privileged-endpoint-in-azure-stack-hub"></a>实验室 - 在 Azure Stack Hub 中访问特权终结点
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -77,7 +72,7 @@ ms.locfileid: "139251633"
     $ipAddress = (Resolve-DnsName -Name AzS-ERCS01).IPAddress
     ```
 
-1. 在“管理员: Windows PowerShell ISE”窗口运行以下命令，将运行特权终结点的基础结构 VM 的 IP 地址添加到 WinRM 受信任主机列表中（除非已允许所有主机）：
+1. 在“Administrator: Windows PowerShell ISE”窗口运行以下命令，将运行特权终结点的基础结构 VM 的 IP 地址添加到 WinRM 受信任主机列表中（除非已允许所有主机）：
 
     ```powershell
     $trustedHosts = (Get-Item -Path WSMan:\localhost\Client\TrustedHosts).Value
@@ -91,7 +86,7 @@ ms.locfileid: "139251633"
     Set-Item WSMan:\localhost\Client\TrustedHosts -Value $TrustedHosts -Force
     ```
 
-1. 在“管理员: Windows PowerShell ISE”窗口运行以下命令，将 Azure Stack Hub 管理员凭据存储在变量中：
+1. 在“Administrator: Windows PowerShell ISE”窗口运行以下命令，将 Azure Stack Hub 管理员凭据存储在变量中：
 
     ```powershell
     $adminUserName = 'CloudAdmin@azurestack.local'

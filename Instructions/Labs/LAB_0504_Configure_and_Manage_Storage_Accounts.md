@@ -2,13 +2,8 @@
 lab:
   title: 实验室：配置和管理 Azure Stack Hub 存储帐户
   module: 'Module 5: Manage Infrastructure'
-ms.openlocfilehash: 0c83afc42ddfb6e7f9c82efeb9921c2c80e832ad
-ms.sourcegitcommit: f99a365741ad02181da3b4fc4a921d5437810bc2
-ms.translationtype: HT
-ms.contentlocale: zh-CN
-ms.lasthandoff: 03/02/2022
-ms.locfileid: "139252336"
 ---
+
 # <a name="lab---configure-and-manage-azure-stack-hub-storage-accounts"></a>实验室 - 配置和管理 Azure Stack Hub 存储帐户
 # <a name="student-lab-manual"></a>学生实验室手册
 
@@ -165,7 +160,7 @@ ms.locfileid: "139252336"
     - 帐户类型：“存储(常规用途 v1)”
     - 复制：本地冗余存储 (LRS)
 
-1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡上，单击“下一步:   高级 &gt;”。
+1. 在“创建存储帐户”边栏选项卡的“基本信息”选项卡上，单击“下一步:  高级 &gt;”。
 1. 在“创建存储帐户”边栏选项卡的“高级”选项卡上，保留默认设置，然后单击“查看 + 创建”  。
 1. 在“创建存储帐户”边栏选项卡的“查看 + 创建”选项卡上，单击“创建”  。
 
@@ -189,7 +184,7 @@ ms.locfileid: "139252336"
 1. 在“存储”边栏选项卡上，单击“存储帐户”。
 1. 在“存储 \| 存储帐户”边栏选项卡上的“帐户名称”筛选器文本框中，键入在上一个任务中创建的第一个存储帐户的名称，然后验证列出的存储帐户名称是否处于“已删除”状态  。
 1. 单击表示第一个已删除的存储帐户的条目。
-1. 在“存储帐户”边栏选项卡中，单击“恢复”。 出现确认提示时，单击“是”。
+1. 在“存储帐户”边栏选项卡中，单击“恢复”。 出现确认提示时，单击“是”****。
 
     >**注意**：请等待操作完成。 这应该可以在一分钟内完成。 请记住，恢复的存储帐户可能要额外花费一些时间才会出现在用户门户中。
 
